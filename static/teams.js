@@ -1,9 +1,29 @@
 document.addEventListener('DOMContentLoaded', function() {
     let selectionMode = false;
+    let selectedTeamIds = new Set();
 
     const leaveButtonToggle = document.getElementById('toggle-leave');
     const leaveButton = document.getElementById('leave-button');
     const leaveButtonConfirmation = document.getElementById('leave-button-confirmation');
+
+    function restoreSelections() {
+        const cards = document.getElementsByClassName('card-body');
+        
+        for (let card of cards) {
+            if (card.closest('.card').style.display === 'none') continue;
+
+            const teamId = card.querySelector('input[name="team[]"]').value;
+            if (selectedTeamIds.has(teamId)) {
+                card.classList.add('toggled-leave-team');
+            }
+        }
+    }
+
+    document.addEventListener('paginationPageChange', function(e) {
+    if (selectionMode) {
+        setTimeout(restoreSelections, 10);
+    }
+    });
 
     if (document.querySelectorAll('.card').length !== 0) {
         leaveButtonToggle.disabled = false;
@@ -16,22 +36,32 @@ document.addEventListener('DOMContentLoaded', function() {
         card.addEventListener('click', function() {
             if (!selectionMode)
                 return;
-        card.classList.toggle('toggled-leave-team');
+                
+            const teamId = card.querySelector('input[name="team[]"]').value;
+            
+            if (selectedTeamIds.has(teamId)) {
+                selectedTeamIds.delete(teamId);
+                card.classList.remove('toggled-leave-team');
+            } else {
+                selectedTeamIds.add(teamId);
+                card.classList.add('toggled-leave-team');
+            }
 
-        const selectedCards = document.getElementsByClassName('toggled-leave-team').length;
-        leaveButton.disabled = selectedCards === 0;
+            const selectedCards = document.getElementsByClassName('toggled-leave-team').length;
+            leaveButton.disabled = selectedCards === 0;
         });
     }
 
     leaveButtonToggle.addEventListener('click', function() {
         selectionMode = !selectionMode;
         leaveButtonToggle.textContent = selectionMode ? "Cancel Selection" : "Select teams to leave!";
-        leaveButton.hidden = false;
+        leaveButton.classList.toggle('visible', selectionMode);
         leaveButton.disabled = true;
+        leaveButtonToggle.classList.toggle('btn-danger', !selectionMode);
+        leaveButtonToggle.classList.toggle('btn-secondary', selectionMode);
 
         if (!selectionMode) {
-            leaveButton.hidden = true;
-            leaveButton.disabled = true;
+            selectedTeamIds.clear();
             for (let card of cards) {
                 card.classList.remove('toggled-leave-team');
             }
@@ -59,6 +89,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         alert("Failed to leave team.");
                     }
                     if (completedRequests === cardsForLeaving.length) {
+                        selectedTeamIds.clear();
                         window.location.reload();
                     }
                 })
