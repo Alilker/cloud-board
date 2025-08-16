@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+
+
+{% block title %}
+
+    Explore
+
+{% endblock %}
+
+{% block main %}
+
+    {% if topics %}
+        {% for topic in topics %}
+            <div class="card text-center mb-3">
+                <div class="card-body">
+                    <h2 class="card-title">{{ topic.name }}</h2>
+                    <form action="/team/{{ topic.team_id }}/topic/{{ topic.name }}" method="get">
+                        <button type="submit" class="btn btn-primary">View Topic</button>
+                    </form>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-center mt-5"><i>Nothing to show here...</i></p>
+    {% endif %}
+
+
+{% endblock %}

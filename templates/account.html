@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+
+
+{% block title %}
+
+    Account
+
+{% endblock %}
+
+
+{% block main %}
+
+    <form action="/account" method="post">
+        <p>Input the fields you would like to change, enter current password to confirm changes and click submit.</p>
+        <div class="mb-3">
+            <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="username" placeholder="Change username" type="text">
+        </div>
+        <div class="mb-3">
+            <input class="form-control mx-auto w-auto" name="new_password" placeholder="Change password" type="password">
+        </div>
+        <div class="mb-3">
+            <input class="form-control mx-auto w-auto" name="confirmation" placeholder="Confirm new password" type="password">
+        </div>
+        <div class="mb-3">
+            <input class="form-control mx-auto w-auto" name="current_password" placeholder="Enter current password" type="password">
+        </div>
+        <button class="btn btn-primary" type="submit">Register</button>
+    </form>
+
+{% endblock %}
