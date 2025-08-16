@@ -3,10 +3,37 @@ import os
 
 from flask import redirect, render_template, request, session, flash
 from functools import wraps
-from cs50 import SQL
+import sqlite3
+
+class Database:
+    def __init__(self, database_path):
+        self.database_path = database_path
+    
+    def execute(self, query, *args):
+        conn = sqlite3.connect(self.database_path)
+        conn.row_factory = sqlite3.Row  # This makes rows behave like dictionaries
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute(query, args)
+            
+            # Handle different query types
+            if query.strip().upper().startswith('SELECT'):
+                rows = cursor.fetchall()
+                result = [dict(row) for row in rows]  # Convert to list of dicts
+            elif query.strip().upper().startswith('INSERT'):
+                conn.commit()
+                result = cursor.lastrowid  # Return the ID of inserted row
+            else:
+                conn.commit()
+                result = cursor.rowcount  # Return number of affected rows
+                
+            return result
+        finally:
+            conn.close()
 
 database_path = os.path.join(os.path.dirname(__file__), "teampost.db")
-db = SQL(f"sqlite:///{database_path}")
+db = Database(database_path)
 
 def apology(message, code=400):
     """Render message as an apology to user."""

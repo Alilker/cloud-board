@@ -1,10 +1,9 @@
 import os
 
-from cs50 import SQL
 from flask import Flask, flash, redirect, render_template, request, session, jsonify
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
-from helpers import apology, login_required, lookup, usd, membership_required
+from helpers import apology, login_required, lookup, usd, membership_required, db
 from random import SystemRandom
 import string
 
@@ -21,12 +20,6 @@ app.config["SESSION_TYPE"] = "filesystem"
 # app.config["SERVER_NAME"] = "teampostapp.local"
 app.secret_key = os.environ.get("SECRET_KEY", "Supersecretkey")
 Session(app)
-
-
-# Configure CS50 Library to use SQLite database
-# Use absolute path for database in production
-database_path = os.path.join(os.path.dirname(__file__), "teampost.db")
-db = SQL(f"sqlite:///{database_path}")
 
 
 @app.after_request
