@@ -7,7 +7,7 @@
 
 {% endblock %}
 
-{% block script %}
+{% block scripts %}
 
     <script src="/static/pagination.js"></script>
 
@@ -17,7 +17,10 @@
 
         <h1 class="text-center">Explore Teams</h1>
         <p class="text-center pb-5">Join a team to start collaborating!</p>
-        
+        <form>
+            <input type="text" autocomplete="off" class="form-control mb-2 team-search" id="search-input" name="search" placeholder="Search Teams...">
+        </form>
+
         {% if teams %}
             {% for team in teams %}
             <div class="card text-center mb-3">

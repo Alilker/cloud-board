@@ -16,14 +16,13 @@
 
         <link href="/static/styles.css" rel="stylesheet">
 
-        <title>C$50 Finance: {% block title %}{% endblock %}</title>
+        <title>{% block title %}{% endblock %}</title>
 
-        {% block script %} {% endblock %}
+        {% block scripts %}{% endblock %}
 
     </head>
 
     <body>
-
         <nav class="bg-light border navbar navbar-expand-md navbar-light">
             <div class="container-fluid">
                 <a class="navbar-brand" href="/"><span class="blue">C</span><span class="red">$</span><span class="yellow">5</span><span class="green">0</span> <span class="red">Finance</span></a>
@@ -38,7 +37,7 @@
 
                         </ul>
                         <ul class="navbar-nav ms-auto mt-2">
-                            <li class="nav-item"><a class="nav-link" href="/account">Account</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/account">{{ session["username"] }}</a></li>
                             <li class="nav-item"><a class="nav-link" href="/logout">Log Out</a></li>
                         </ul>
                     {% else %}
@@ -54,40 +53,15 @@
         {% with messages = get_flashed_messages() %}
             {% if messages %}
                 <header>
-                    {% for message in messages %}
-                        <div class="alert alert-primary mb-0 text-center" role="alert">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
+                    <div class="alert alert-primary mb-0 text-center" role="alert">
+                        {{ messages[0] }}
+                    </div>
                 </header>
             {% endif %}
         {% endwith %}
 
-
         <main class="container py-5 text-center">
             {% block main %}{% endblock %}
         </main>
-
-        <footer class="mb-5">
-            <form action="https://validator.w3.org/check" class="text-center" enctype="multipart/form-data" method="post" target="_blank">
-                <input name="doctype" type="hidden" value="HTML5">
-                <input name="fragment" type="hidden">
-                <input alt="Validate" src="/static/I_heart_validator.png" type="image"> <!-- https://validator.w3.org/ -->
-            </form>
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    // Adapted from https://stackoverflow.com/a/10162353
-                    const html = '<!DOCTYPE ' +
-                    document.doctype.name +
-                    (document.doctype.publicId ? ' PUBLIC "' + document.doctype.publicId + '"' : '') +
-                    (!document.doctype.publicId && document.doctype.systemId ? ' SYSTEM' : '') +
-                    (document.doctype.systemId ? ' "' + document.doctype.systemId + '"' : '') +
-                    '>\n' + document.documentElement.outerHTML;
-                    document.querySelector('form[action="https://validator.w3.org/check"] > input[name="fragment"]').value = html;
-                });
-            </script>
-        </footer>
-
     </body>
-
 </html>

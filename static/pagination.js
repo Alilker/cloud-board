@@ -1,173 +1,60 @@
-(function() {
-    'use strict';
-
-    class AutoPagination {
-        constructor() {
-            this.currentPage = 1;
-            this.itemsPerPage = 5;
-            this.itemSelector = '.card';
-            this.paginationSelector = '.pagination';
-            this.allItems = [];
-            this.paginationContainer = null;
-            
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', () => this.init());
-            } else {
-                this.init();
-            }
-        }
-
-        init() {
-            this.allItems = Array.from(document.querySelectorAll(this.itemSelector));
-            if (this.allItems.length === 0) return;
-            this.setupPaginationContainer();
-            this.updatePagination();
-            this.showPage(this.currentPage);
-        }
-
-        setupPaginationContainer() {
-            this.paginationContainer = document.querySelector(this.paginationSelector);
-            
-            if (!this.paginationContainer) {
-                const nav = document.createElement('nav');
-                nav.setAttribute('aria-label', 'Pagination navigation');
-                const ul = document.createElement('ul');
-                ul.className = 'pagination justify-content-center';
-                nav.appendChild(ul);
-                
-                const container = [
-                    document.querySelector('.teams-container'),
-                    document.querySelector('.container'),
-                    document.querySelector('main'),
-                    document.body
-                ].find(el => el !== null) || document.body;
-                
-                container.appendChild(nav);
-                this.paginationContainer = ul;
-            }
-        }
-
-        updatePagination() {
-            const totalPages = Math.ceil(this.allItems.length / this.itemsPerPage);
-            
-            if (totalPages <= 1) {
-                this.paginationContainer.style.display = 'none';
-                return;
-            }
-            
-            this.paginationContainer.style.display = 'flex';
-            this.paginationContainer.innerHTML = '';
-            
-            this.addPreviousButton();
-            this.addPageNumbers(totalPages);
-            this.addNextButton(totalPages);
-        }
-
-        addPreviousButton() {
-            const li = document.createElement('li');
-            li.className = `page-item ${this.currentPage === 1 ? 'disabled' : ''}`;
-            const btn = document.createElement('button');
-            btn.className = 'page-link';
-            btn.textContent = 'Previous';
-            btn.onclick = () => this.currentPage > 1 && this.goToPage(this.currentPage - 1);
-            li.appendChild(btn);
-            this.paginationContainer.appendChild(li);
-        }
-
-        addNextButton(totalPages) {
-            const li = document.createElement('li');
-            li.className = `page-item ${this.currentPage === totalPages ? 'disabled' : ''}`;
-            const btn = document.createElement('button');
-            btn.className = 'page-link';
-            btn.textContent = 'Next';
-            btn.onclick = () => this.currentPage < totalPages && this.goToPage(this.currentPage + 1);
-            li.appendChild(btn);
-            this.paginationContainer.appendChild(li);
-        }
-
-        addPageNumbers(totalPages) {
-            const startPage = Math.max(1, this.currentPage - 2);
-            const endPage = Math.min(totalPages, this.currentPage + 2);
-            
-            if (startPage > 1) {
-                this.addPageButton(1);
-                if (startPage > 2) this.addEllipsis();
-            }
-            
-            for (let i = startPage; i <= endPage; i++) {
-                this.addPageButton(i);
-            }
-            
-            if (endPage < totalPages) {
-                if (endPage < totalPages - 1) this.addEllipsis();
-                this.addPageButton(totalPages);
-            }
-        }
-
-        addPageButton(pageNum) {
-            const li = document.createElement('li');
-            li.className = `page-item ${this.currentPage === pageNum ? 'active' : ''}`;
-            const btn = document.createElement('button');
-            btn.className = 'page-link';
-            btn.textContent = pageNum;
-            btn.onclick = () => this.goToPage(pageNum);
-            li.appendChild(btn);
-            this.paginationContainer.appendChild(li);
-        }
-        
-        addEllipsis() {
-            const li = document.createElement('li');
-            li.className = 'page-item disabled';
-            const span = document.createElement('span');
-            span.className = 'page-link';
-            span.textContent = '...';
-            li.appendChild(span);
-            this.paginationContainer.appendChild(li);
-        }
-        
-        goToPage(page) {
-            this.currentPage = page;
-            this.showPage(this.currentPage);
-            this.updatePagination();
-            
-            document.dispatchEvent(new CustomEvent('paginationPageChange', {
-                detail: { 
-                    page: this.currentPage,
-                    totalPages: this.getTotalPages()
-                }
-            }));
-        }
+document.addEventListener('DOMContentLoaded', function() {
+    const itemsPerPage = 5;
+    const items = document.querySelectorAll('.card');
     
-        showPage(page) {
-            const startIndex = (page - 1) * this.itemsPerPage;
-            const endIndex = startIndex + this.itemsPerPage;
-            
-            this.allItems.forEach(item => item.style.display = 'none');
-            
-            for (let i = startIndex; i < endIndex && i < this.allItems.length; i++) {
-                this.allItems[i].style.display = 'block';
-            }
-        }
+    if (items.length <= itemsPerPage) return; // No pagination needed
+    
+    let currentPage = 1;
+    const totalPages = Math.ceil(items.length / itemsPerPage);
+    
+    // Create pagination container
+    const nav = document.createElement('nav');
+    nav.innerHTML = `
+        <ul class="pagination justify-content-center">
+            <li class="page-item"><button class="page-link" id="prev-btn">Previous</button></li>
+            <li class="page-item"><span class="page-link" id="page-info">Page 1 of ${totalPages}</span></li>
+            <li class="page-item"><button class="page-link" id="next-btn">Next</button></li>
+        </ul>
+    `;
 
-        getCurrentPage() {
-            return this.currentPage;
-        }
+    // Add pagination at the bottom of the main content
+    const main = document.querySelector('main') || document.body;
+    main.appendChild(nav);
 
-        getTotalPages() {
-            return Math.ceil(this.allItems.length / this.itemsPerPage);
-        }
-
-        refresh() {
-            this.allItems = Array.from(document.querySelectorAll(this.itemSelector));
-            this.updatePagination();
-            this.showPage(this.currentPage);
-        }
-
-        destroy() {
-            if (this.paginationContainer) this.paginationContainer.remove();
-            this.allItems.forEach(item => item.style.display = 'block');
-        }
+    const prevButton = document.getElementById('prev-btn');
+    const nextButton = document.getElementById('next-btn');
+    const pageInfo = document.getElementById('page-info');
+    
+    // Show page function
+    function showPage(page) {
+        const start = (page - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        
+        items.forEach((item, index) => {
+            item.style.display = (index >= start && index < end) ? 'block' : 'none';
+        });
+        
+        // Update pagination info
+        pageInfo.textContent = `Page ${page} of ${totalPages}`;
+        prevButton.disabled = page === 1;
+        nextButton.disabled = page === totalPages;
     }
-
-    window.AutoPagination = new AutoPagination();
-})();
+    
+    // Event listeners
+    prevButton.addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            showPage(currentPage);
+        }
+    });
+    
+    nextButton.addEventListener('click', () => {
+        if (currentPage < totalPages) {
+            currentPage++;
+            showPage(currentPage);
+        }
+    });
+    
+    // Show first page
+    showPage(1);
+});

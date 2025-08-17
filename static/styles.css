@@ -95,3 +95,8 @@ nav .navbar-brand .green
     transform: scale(1);
     transition:  transform 0.3s ease;
 }
+
+.team-search {
+    border: 2px solid gray;
+    text-align: center;
+}
