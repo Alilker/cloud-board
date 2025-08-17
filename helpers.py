@@ -87,14 +87,14 @@ def membership_required(f):
             flash("You must be logged in to view and/or make changes to this team.")
             return render_template("login.html")
 
-        team_id = kwargs.get("team_id")
-        team = db.execute("SELECT * FROM teams WHERE id = ?", team_id)
+        team_name = kwargs.get("team_name")
+        team = db.execute("SELECT * FROM teams WHERE name = ?", team_name)
         if not team:
             return render_template("error.html", error="Team doesn't exist")
 
         membership = db.execute(
             "SELECT * FROM team_members WHERE team_id = ? AND user_id = ?",
-            team_id, session["user_id"]
+            team[0]["id"], session["user_id"]
         )
         if not membership:
             return render_template("error.html", error="You are not a member of this team")

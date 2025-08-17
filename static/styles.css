@@ -87,14 +87,11 @@ nav .navbar-brand .green
 }
 
 .leave-button {
-    opacity: 0;
     transform: scale(0);
-    transition: opacity 0.3s ease, transform 0.3s ease;
-    pointer-events: none;
+    transition:  transform 0.3s ease;
 }
 
 .leave-button.visible {
-    opacity: 1;
     transform: scale(1);
-    pointer-events: auto;
+    transition:  transform 0.3s ease;
 }

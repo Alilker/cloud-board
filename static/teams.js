@@ -2,12 +2,12 @@ document.addEventListener('DOMContentLoaded', function() {
     let selectionMode = false;
     let selectedTeamIds = new Set();
 
-    const leaveButtonToggle = document.getElementById('toggle-leave');
-    const leaveButton = document.getElementById('leave-button');
-    const leaveButtonConfirmation = document.getElementById('leave-button-confirmation');
+    const leaveButtonToggle = document.querySelector('#toggle-leave');
+    const leaveButton = document.querySelector('#leave-button');
+    const leaveButtonConfirmation = document.querySelector('#leave-button-confirmation');
 
     function restoreSelections() {
-        const cards = document.getElementsByClassName('card-body');
+        const cards = document.querySelectorAll('.card-body');
         
         for (let card of cards) {
             if (card.closest('.card').style.display === 'none') continue;
@@ -17,6 +17,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 card.classList.add('toggled-leave-team');
             }
         }
+    }
+
+    const errors = JSON.parse(localStorage.getItem('leaveErrors') || '[]');
+    const errorTeamNames = JSON.parse(localStorage.getItem('errorTeamNames') || '[]');
+    if (errors.length) {
+        const errorModal = new bootstrap.Modal(document.querySelector('#leave-team-error'));
+        const errorMessages = errors.map((err, i) => `${err} (From team: ${errorTeamNames[i]})`);
+        document.querySelector('#leave-team-error .leave-errors').innerHTML = errorMessages.join('<br>');
+        errorModal.show();
+        localStorage.removeItem('errorTeamNames');
+        localStorage.removeItem('leaveErrors');
     }
 
     document.addEventListener('paginationPageChange', function(e) {
@@ -30,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
         leaveButtonToggle.hidden = false;
     }
 
-    const cards = document.getElementsByClassName('card-body');
+    const cards = document.querySelectorAll('.card-body');
 
     for (let card of cards) {
         card.addEventListener('click', function() {
@@ -47,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 card.classList.add('toggled-leave-team');
             }
 
-            const selectedCards = document.getElementsByClassName('toggled-leave-team').length;
+            const selectedCards = document.querySelectorAll('.toggled-leave-team').length;
             leaveButton.disabled = selectedCards === 0;
         });
     }
@@ -69,8 +80,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     leaveButtonConfirmation.addEventListener('click', function() {
-        const cardsForLeaving = Array.from(document.getElementsByClassName('toggled-leave-team'));
+        const cardsForLeaving = Array.from(document.querySelectorAll('.toggled-leave-team'));
         let completedRequests = 0;
+        let errors = [];
+        let errorTeamNames = [];
 
         for (let card of cardsForLeaving) {
             const teamId = card.querySelector('input[name="team[]"]').value;
@@ -81,25 +94,36 @@ document.addEventListener('DOMContentLoaded', function() {
                      'Content-Type': 'application/json'
                  },
                  body: JSON.stringify({ 'team_id': teamId })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    completedRequests++;
-                    if (!data.success) {
-                        alert("Failed to leave team.");
+            })
+            .then(res => res.json())
+            .then(data => {
+                completedRequests++;
+                if (!data.success) {
+                    errors.push(data.error || "An error occurred while leaving the teams.")
+                    errorTeamNames.push(data.name || "Unknown Team");
+                }
+                if (completedRequests === cardsForLeaving.length) {
+                    if (errors.length > 0) {
+                        localStorage.setItem('leaveErrors', JSON.stringify(errors));
+                        localStorage.setItem('errorTeamNames', JSON.stringify(errorTeamNames));
+                    } 
+                    selectedTeamIds.clear();
+                    window.location.reload();
+                }
+            })
+            .catch(() => {
+                completedRequests++;
+                errors.push("An error occurred while leaving the teams.");
+                errorTeamNames.push("Unknown Team");
+                if (completedRequests === cardsForLeaving.length) {
+                    if (errors.length > 0) {
+                        localStorage.setItem('leaveErrors', JSON.stringify(errors));
+                        localStorage.setItem('errorTeamNames', JSON.stringify(errorTeamNames));
                     }
-                    if (completedRequests === cardsForLeaving.length) {
-                        selectedTeamIds.clear();
-                        window.location.reload();
-                    }
-                })
-                .catch(() => {
-                    completedRequests++;
-                    alert("Failed to leave team.");
-                    if (completedRequests === cardsForLeaving.length) {
-                        window.location.reload();
-                    }
-                });
+                    selectedTeamIds.clear();
+                    window.location.reload();
+                }
+            });
         }
     });
 
@@ -111,13 +135,13 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(res => res.json())
         .then(data => {
-            const elementId = document.getElementById(feedbackElementId);
+            const element = document.getElementById(feedbackElementId);
             if (data.success) {
-                elementId.innerHTML = "<i class='text-success'><strong>Looks Good!</strong></i>";
+                element.innerHTML = "<i class='text-success'><strong>Looks Good!</strong></i>";
             } else {
-                elementId.innerHTML = `<i class='text-danger'><strong>${data.error}</strong></i>`;
+                element.innerHTML = `<i class='text-danger'><strong>${data.error}</strong></i>`;
             }
-            elementId.classList.add('text-feedback');
+            element.classList.add('text-feedback');
         })
         .catch(error => console.error('Fetch error:', error));
     }

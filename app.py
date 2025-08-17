@@ -225,12 +225,11 @@ def explore_teams():
 @login_required
 def view_teams():
     teams = db.execute("""
-        SELECT teams.id, teams.name, teams.description, team_members.privilege, COUNT(team_members.user_id) AS member_count
+        SELECT teams.id, teams.name, teams.description, team_members.privilege,
+            (SELECT COUNT(*) FROM team_members WHERE team_members.team_id = teams.id) AS member_count
         FROM teams
-        LEFT JOIN team_members
-            ON teams.id = team_members.team_id
+        JOIN team_members ON teams.id = team_members.team_id
         WHERE team_members.user_id = ?
-        GROUP BY teams.id
         ORDER BY team_members.privilege
         """, session["user_id"])
 
@@ -238,24 +237,26 @@ def view_teams():
 
 
 
-@app.route("/team/<int:team_id>")
+@app.route("/team/<string:team_name>")
 @membership_required
-def team_page(team_id):
+def team_page(team_name):
 
+    print(team_name)
     topics = db.execute("""
-        SELECT topics.id, topics.name, team_topics.team_id
+        SELECT topics.id, topics.name, teams.name AS team_name
         FROM topics 
         JOIN team_topics ON topics.id = team_topics.topic_id
-        WHERE team_topics.team_id = ?
+        JOIN teams ON team_topics.team_id = teams.id
+        WHERE teams.name = ?
         ORDER BY topics.name
-    """, team_id)
+    """, team_name)
 
     return render_template("team_page.html", topics=topics)
 
 
-@app.route("/team/<int:team_id>/topic/<string:topic_name>")
+@app.route("/team/<string:team_name>/topic/<string:topic_name>")
 @membership_required
-def board(team_id, topic_name):
+def board(team_name, topic_name):
     statuses = [
         {"id": "todo", "name": "To Do"},
         {"id": "doing", "name": "Doing"},
@@ -269,9 +270,10 @@ def board(team_id, topic_name):
         JOIN topic_notes ON notes.id = topic_notes.note_id
         JOIN team_topics ON topic_notes.topic_id = team_topics.topic_id
         JOIN topics ON team_topics.topic_id = topics.id
-        WHERE team_topics.team_id = ?
+        JOIN teams ON team_topics.team_id = teams.id
+        WHERE teams.name = ?
         AND topics.name = ?
-    """, team_id, topic_name.capitalize())
+    """, team_name, topic_name.capitalize())
 
     return render_template("board.html", statuses=statuses, cards=cards)
 
@@ -303,7 +305,7 @@ def create_team():
             GROUP BY teams.id
             ORDER BY team_members.privilege
             """, session["user_id"])
-        return render_template("teams.html", teams= teams, method="get")
+        return render_template("teams.html", teams=teams, method="get")
     
     else:
         team_name = request.form.get("team-name")
@@ -407,9 +409,25 @@ def leave_team():
     data = request.get_json()
     print(data)
     team_id = data.get("team_id")
+
+    privilege = db.execute("SELECT privilege FROM team_members WHERE user_id = ? AND team_id = ?", session["user_id"], team_id)[0]["privilege"]
+
+    if privilege == "admin":
+        team_info = db.execute("""SELECT COUNT(team_members.team_id), teams.name FROM team_members 
+            JOIN teams ON team_members.team_id = teams.id WHERE team_members.team_id = ?""", team_id)[0]
+        member_count = team_info["COUNT(team_members.team_id)"]
+        team_name = team_info["name"]
+        print(team_info)
+        if member_count == 1:
+            return jsonify({"success": False, "error": "Admins cannot leave the team if they are the last member, please delete the team instead.", "name": team_name})
+        admin_count = db.execute("SELECT COUNT(privilege) FROM team_members WHERE team_id = ? AND privilege = 'admin'", team_id)[0]["COUNT(privilege)"]
+        if admin_count == 1:
+            return jsonify({"success": False, "error": "Admins cannot leave the team if they are the last admin. Please delete the team, or pass on admin privileges instead.", "name": team_name})
+
     left_team_count = db.execute("DELETE FROM team_members WHERE team_id = ? AND user_id = ?", team_id, session["user_id"])
     if left_team_count == 0:
-        return jsonify({"success": False})    
+        return jsonify({"success": False})
+    flash("Successfully left teams")
     return jsonify({"success": True})
 
 
