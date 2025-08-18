@@ -18,7 +18,6 @@ app.config["SESSION_TYPE"] = "filesystem"
 app.secret_key = os.environ.get("SECRET_KEY", "Supersecretkey")
 Session(app)
 
-
 @app.after_request
 def after_request(response):
     """Ensure responses aren't cached"""

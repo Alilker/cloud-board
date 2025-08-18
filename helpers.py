@@ -1,68 +1,7 @@
-import requests
-import os
-
-from flask import redirect, render_template, request, session, flash
+from flask import render_template, request, session, flash
 from functools import wraps
-import sqlite3
-
-class Database:
-    """
-    Database helper class for SQLite operations.
-    """
-    
-    def __init__(self, database_path):
-        self.database_path = database_path
-    
-    def execute(self, query, *args):
-        conn = sqlite3.connect(self.database_path)
-        conn.row_factory = sqlite3.Row  # This makes rows behave like dictionaries
-        cursor = conn.cursor()
-        
-        try:
-            cursor.execute(query, args)
-            
-            # Handle different query types
-            if query.strip().upper().startswith('SELECT'):
-                rows = cursor.fetchall()
-                result = [dict(row) for row in rows]  # Convert to list of dicts
-            elif query.strip().upper().startswith('INSERT'):
-                conn.commit()
-                result = cursor.lastrowid  # Return the ID of inserted row
-            else:
-                conn.commit()
-                result = cursor.rowcount  # Return number of affected rows
-                
-            return result
-        finally:
-            conn.close()
-
-database_path = os.path.join(os.path.dirname(__file__), "teampost.db")
-db = Database(database_path)
-
-def apology(message, code=400):
-    """Render message as an apology to user."""
-
-    def escape(s):
-        """
-        Escape special characters.
-
-        https://github.com/jacebrowning/memegen#special-characters
-        """
-        for old, new in [
-            ("-", "--"),
-            (" ", "-"),
-            ("_", "__"),
-            ("?", "~q"),
-            ("%", "~p"),
-            ("#", "~h"),
-            ("/", "~s"),
-            ('"', "''"),
-        ]:
-            s = s.replace(old, new)
-        return s
-
-    return render_template("apology.html", top=code, bottom=escape(message)), code
-
+from cs50 import SQL
+db = SQL("sqlite:///finance.db")
 
 def login_required(f):
     """
@@ -124,8 +63,7 @@ def admin_required(f):
 
         membership = db.execute(
             "SELECT * FROM team_members WHERE team_id = ? AND user_id = ?",
-            team[0]["id"], session["user_id"]
-        )[0]
+            team[0]["id"], session["user_id"])[0]
         
         if not membership:
             return render_template("error.html", error="You are not a member of this team")
