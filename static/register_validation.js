@@ -120,14 +120,11 @@ document.addEventListener('DOMContentLoaded', function() {
         element.classList.add('text-feedback');
     }
 
-    // Function to show error modal
-    function showRegisterErrorModal(errors) {
+    // Function for displaying errors
+    function showError(message) {
         const errorModal = new bootstrap.Modal(document.querySelector('#error-modal'));
         const errorMessage = document.querySelector('#error-modal .errors');
-
-        const listItems = errors.map(error => `<li>${error}</li>`).join('');
-        errorMessage.innerHTML = `<ul class="mb-0">${listItems}</ul>`;
-
+        errorMessage.innerHTML = message;
         errorModal.show();
     }
 
@@ -158,17 +155,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        window.location.href = data.redirect || '/';
+                        window.location.href = '/';
                     } 
                     else {
-
                         // Handle errors
-                        const errors = data.error || 'Registration failed. Please try again.';
-                        showRegisterErrorModal([errors]);
+                        showError(data.error || 'Registration failed. Please try again.');
                     }
                 })
-                .catch(() => {
-                    showRegisterErrorModal(['A network error occurred during registration']);
+                .catch(error => {
+                    console.error(error);
+                    showError('A network error occurred, please try again!');
                 });
             });
         };

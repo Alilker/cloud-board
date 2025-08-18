@@ -27,11 +27,13 @@
             <div class="card-body">
                 <h2 class="card-title">{{ team.name }}</h2>
                 {% if team.description %}
-                    <p class="card-text">{{ team.description }}</p>
+                    <p class="card-text"><i>{{ team.description }}</i></p>
                 {% else %}
                     <p class="card-text"><i>No description provided.</i></p>
                 {% endif %}
-                <p class="card-text"> {{ team.member_count }} members</p>
+                <p class="card-text">Member count: {{ team.member_count }}</p>
+                <p class="card-text">Status: {{ team.access_type.capitalize() }}</p>
+                <p class="card-text">Team Code: {{ team.code }}</p>
                 <div class="container">
                     <form action="/explore" method="post">
                         <input type="number" name="team_id" value="{{ team.id }}" hidden>
@@ -47,9 +49,9 @@
     {% endif %}
 
     <ul class="pagination justify-content-center" hidden>
-        <li class="page-item"><button class="page-link" id="prev-btn">Previous</button></li>
+        <li class="page-item"><button class="page-link btn btn-secondary me-1" id="prev-btn">Previous</button></li>
         <li class="page-item"><span class="page-link" id="page-info"></span></li>
-        <li class="page-item"><button class="page-link" id="next-btn">Next</button></li>
+        <li class="page-item"><button class="page-link btn btn-secondary ms-1" id="next-btn">Next</button></li>
     </ul>
 
 {% endblock %}

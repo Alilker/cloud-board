@@ -3,7 +3,7 @@ import os
 from flask import Flask, flash, redirect, render_template, request, session, jsonify
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
-from helpers import login_required, membership_required, db
+from helpers import login_required, membership_required, admin_required, db
 from random import SystemRandom
 import os
 import string
@@ -31,13 +31,13 @@ def after_request(response):
 """ 
 User account logic and route block start for logging in, registering, and changing username or password.
 """
+# Logging in, account managing, registering, and logging out have been
+# adapted from CS50's finance problem set
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """
     Log user in
     """
-
-    next_url = request.args.get("next")
     
     # Forget any user_id
     session.clear()
@@ -77,12 +77,9 @@ def login():
         session["user_id"] = rows[0]["id"]
         session["username"] = rows[0]["username"]
 
-        # Redirect user to home page
-        if not next_url:
-            next_url = "/"
             
         # Return success
-        return jsonify({"success": True, "redirect": next_url})
+        return jsonify({"success": True})
 
     # User reached route via GET (as by clicking a link or via redirect)
     else:
@@ -119,19 +116,23 @@ def register():
         # Validate username length requirements
         username_length = len(username)
         if username_length > 15:
-            errors.append(f"Username is {username_length} characters, limit is 15!")
+            return jsonify({"success": False, 
+                            "error": f"Username is {username_length} characters, limit is 15!"})
         elif username_length < 5:
-            errors.append(f"Username is {username_length} characters, must be at least 5 characters!")
+            return jsonify({"success": False, 
+                            "error": f"Username is {username_length} characters, must be at least 5 characters!"})
         else:
             
             # Check if username is already taken
             existing_user = db.execute("SELECT * FROM users WHERE username = ?", username)
             if existing_user:
-                errors.append("Username is already taken!")
+                return jsonify({"success": False, 
+                                "error": "Username is already taken!"})
 
     # Password validation
     if not password:
-        errors.append("Missing password!")
+        return jsonify({"success": False, 
+                        "error": "Missing password!"})
     else:
         
         # Validate password length and pattern requirements
@@ -139,23 +140,23 @@ def register():
         pattern = r"(?=.*\d)(?=.*[a-z])(?=.*[A-Z])\S{8,}"
         
         if password_length > 20:
-            errors.append(f"Password is {password_length} characters, limit is 20!")
+            return jsonify({"success": False, 
+                            "error": f"Password is {password_length} characters, limit is 20!"})
         elif password_length < 8:
-            errors.append(f"Password is {password_length} characters, must be at least 8 characters!")
+            return jsonify({"success": False, 
+                            "error": f"Password is {password_length} characters, must be at least 8 characters!"})
         elif not re.match(pattern, password):
-            errors.append("Password must contain at least one number, one uppercase letter, and one lowercase letter!")
+            return jsonify({"success": False, 
+                            "error": "Password must contain at least one number, one uppercase letter, and one lowercase letter!"})
         else:
             
             # Check password confirmation
             if not confirmation:
-                errors.append("Missing password confirmation!")
+                return jsonify({"success": False, 
+                                "error": "Missing password confirmation!"})
             elif confirmation != password:
-                errors.append("Passwords don't match!")
-
-    # Return errors if any
-    if errors:
-        return jsonify({"success": False, 
-                        "errors": errors})
+                return jsonify({"success": False, 
+                                "error": "Passwords don't match!"})
 
     # Create user account
     user_id = db.execute(
@@ -198,7 +199,6 @@ def account():
     
     # Check if any changes are requested
     has_changes = False
-    errors = []
     
     # Username validation
     username_valid = True
@@ -208,19 +208,19 @@ def account():
         # Validate username length requirements
         username_length = len(new_username)
         if username_length > 15:
-            errors.append(f"Username is {username_length} characters, limit is 15!")
-            username_valid = False
+            return jsonify({"success": False, 
+                            "error": f"Username is {username_length} characters, limit is 15!"})
         elif username_length < 5:
-            errors.append(f"Username is {username_length} characters, must be at least 5 characters!")
-            username_valid = False
+            return jsonify({"success": False, 
+                            "error": f"Username is {username_length} characters, must be at least 5 characters!"})
         else:
             # Check if username is taken (excluding current user's username)
             current_username = session.get("username")
             if new_username != current_username:
                 existing_user = db.execute("SELECT * FROM users WHERE username = ?", new_username)
                 if existing_user:
-                    errors.append("Username is already taken!")
-                    username_valid = False
+                    return jsonify({"success": False, 
+                                    "error": "Username is already taken!"})
     
     # Password validation
     password_valid = True
@@ -232,32 +232,27 @@ def account():
         pattern = r"(?=.*\d)(?=.*[a-z])(?=.*[A-Z])\S{8,}"
         
         if password_length > 20:
-            errors.append(f"Password is {password_length} characters, limit is 20!")
-            password_valid = False
+            return jsonify({"success": False, 
+                            "error": f"Password is {password_length} characters, limit is 20!"})
         elif password_length < 8:
-            errors.append(f"Password is {password_length} characters, must be at least 8 characters!")
-            password_valid = False
+            return jsonify({"success": False, 
+                            "error": f"Password is {password_length} characters, must be at least 8 characters!"})
         elif not re.match(pattern, new_password):
-            errors.append("Password must contain at least one number, one uppercase letter, and one lowercase letter!")
-            password_valid = False
+            return jsonify({"success": False, 
+                            "error": "Password must contain at least one number, one uppercase letter, and one lowercase letter!"})
         else:
             # Check password confirmation
             if not confirmation or confirmation.strip() == "":
-                errors.append("Please confirm your new password!")
-                password_valid = False
+                return jsonify({"success": False, 
+                                "error": "Please confirm your new password!"})
             elif new_password != confirmation:
-                errors.append("New passwords do not match!")
-                password_valid = False
-    
+                return jsonify({"success": False, 
+                                "error": "New passwords do not match!"})
+
     # Check if any changes were requested
     if not has_changes:
         return jsonify({"success": False, 
                         "error": "No changes were made. Please enter a new username or password!"})
-    
-    # Return errors if any
-    if errors:
-        return jsonify({"success": False, 
-                        "errors": errors})
     
     # All validations passed - apply changes
     if new_username and new_username.strip() and username_valid:
@@ -269,7 +264,7 @@ def account():
         db.execute("UPDATE users SET hash = ? WHERE id = ?", new_hash, user_id)
     
     flash("Successfully made changes!")
-    return jsonify({"success": True, "redirect": True})
+    return jsonify({"success": True})
 
 @app.route("/logout")
 def logout():
@@ -306,7 +301,7 @@ def explore_teams():
     if request.method == "GET":
         if search_query:
             teams = db.execute("""
-                SELECT teams.id, teams.name, teams.description, COUNT(team_members.user_id) AS member_count
+                SELECT teams.id, teams.name, teams.description, teams.code, teams.access_type, COUNT(team_members.user_id) AS member_count
                 FROM teams
                 LEFT JOIN team_members
                 ON teams.id = team_members.team_id
@@ -323,7 +318,7 @@ def explore_teams():
         
         else:
             teams = db.execute("""
-                SELECT teams.id, teams.name, teams.description, COUNT(team_members.user_id) AS member_count
+                SELECT teams.id, teams.name, teams.description, teams.code, teams.access_type, COUNT(team_members.user_id) AS member_count
                 FROM teams
                 LEFT JOIN team_members
                     ON teams.id = team_members.team_id
@@ -384,7 +379,7 @@ def view_teams():
         
     else:
         teams = db.execute("""
-            SELECT teams.id, teams.name, teams.description, team_members.privilege,
+            SELECT teams.id, teams.name, teams.description, teams.code, teams.access_type, team_members.privilege,
                 (SELECT COUNT(*) FROM team_members WHERE team_members.team_id = teams.id) AS member_count
             FROM teams
             JOIN team_members ON teams.id = team_members.team_id
@@ -401,10 +396,10 @@ def create_team():
     Allow users to create new teams
     """
 
-    # If user reached route via GET, render the teams page but with the modal already open
+    # If user reached route via GET, render the teams page but with the create team modal already open
     if request.method == "GET":
         teams = db.execute("""
-            SELECT teams.id, teams.name, teams.description, team_members.privilege, COUNT(team_members.user_id) AS member_count
+            SELECT teams.id, teams.name, teams.description, team_members.privilege, teams.code, teams.access_type, COUNT(team_members.user_id) AS member_count
             FROM teams
             LEFT JOIN team_members
                 ON teams.id = team_members.team_id
@@ -412,7 +407,7 @@ def create_team():
             GROUP BY teams.id
             ORDER BY team_members.privilege
             """, session["user_id"])
-        return render_template("teams.html", teams=teams, method="get")
+        return render_template("teams.html", teams=teams, method="get_create_team")
 
     # If user reached route via POST, create the team
     else:
@@ -476,36 +471,194 @@ def create_team():
         
         flash(f"Successfully created {team_name}!")
         return jsonify({"success": True})
+
+@app.route("/manage_team/<string:team_name>", methods=["GET", "POST"])
+@admin_required
+def manage_team(team_name):
+
+    search_query = request.args.get("search", "")
+    print(search_query)
+    if request.method == "GET":
+        team = db.execute("SELECT * FROM teams WHERE name = ?", team_name)[0]
+        members = db.execute("""SELECT users.username, team_members.user_id, team_members.privilege FROM team_members 
+                             JOIN users ON team_members.user_id = users.id 
+                             WHERE team_members.team_id = ? AND users.username LIKE ?""", team["id"], f"%{search_query}%")
+        print(members)
+
+        if search_query:
+            return render_template("manage_team.html", team=team, current_user=session["user_id"], members=members, method="get_search_member")
+        else:
+            return render_template("manage_team.html", team=team, current_user=session["user_id"], members=members)
+
+    else:
+        data = request.get_json()
+        team_id = data.get("team_id")
+        privilege = db.execute("SELECT privilege FROM team_members WHERE team_id = ? AND user_id = ?", team_id, session["user_id"])[0]["privilege"]
+        
+        if privilege == "admin":
+            data = request.get_json()
+            team_id = data.get("team_id")
+            current_data = db.execute("SELECT * FROM teams WHERE id = ?", team_id)[0]
+
+            team_name = data.get("team_name") or current_data["name"]
+            team_code = data.get("team_code") or current_data["code"]
+            team_description = data.get("team_description") or current_data["description"]
+            team_access_type = data.get("team_access_type") or current_data["access_type"]
+
+            # Name length requirement filter
+            if len(team_name) > 30:
+                return jsonify({"success": False, 
+                                "error": f"Team name contains {len(team_name)} characters, limit is 30!"})
+            
+            if len(team_name) < 7:
+                return jsonify({"success": False, 
+                                "error": f"Team name contains {len(team_name)} characters, must be at least 7 characters long!"})
+
+            if team_name != current_data["name"]:
+                taken = db.execute("SELECT 1 FROM teams WHERE name = ?", team_name)
+                    
+                # If taken, return such
+                if taken:
+                    return jsonify({"success": False, 
+                                    "error": "Desired name is already taken!"})
+            
+            if len(team_code) > 12:
+                return jsonify({"success": False, 
+                                "error": f"Team code contains {len(team_code)} characters, limit is 12!"})
+
+            if team_code and len(team_code) < 6:
+                return jsonify({"success": False, 
+                                "error": f"Team code contains {len(team_code)} characters, must be at least 6 characters long!"})
+
+            if team_access_type not in ("public", "private"):
+                return jsonify({"success": False, 
+                                "error": "Invalid team status"})
+            
+            # Check description length if provided
+            if team_description and len(team_description) > 500:
+                return jsonify({"success": False, 
+                                "error": f"Team description contains {len(team_description)} characters, limit is 500!"})
+            
+            # If all is well create the new team and add the user as admin
+            db.execute("UPDATE teams SET name = ?, code = ?, description = ?, access_type = ? WHERE id = ?", team_name, team_code, team_description, team_access_type, team_id)
+
+            flash(f"Successfully updated {team_name}!")
+            return jsonify({"success": True, "redirect": f"/manage_team/{team_name}"})
+        else:
+            return jsonify({"success": False, 
+                            "error": "Only admins can edit team details!"})
+
+
+@app.route("/manage_member/<string:team_name>", methods=["POST"])
+@admin_required
+def manage_member(team_name):
+    data = request.get_json()
+    team_id = data.get("team_id")
+    member_id = data.get("member_id")
+    new_privilege = data.get("privilege")
     
-@app.route("/join_code", methods=["POST"])
+    user_privilege = db.execute("SELECT privilege FROM team_members WHERE team_id = ? AND user_id = ?", team_id, session["user_id"])[0]["privilege"]
+    if user_privilege == "admin":
+
+        if not new_privilege:
+            return jsonify({"success": False, 
+                            "error": "No privilege level provided!"})
+
+        if new_privilege not in ["admin", "edit", "read", "kick"]:
+            return jsonify({"success": False, 
+                            "error": "Invalid privilege level!"})
+
+        if not member_id:
+            return jsonify({"success": False, 
+                            "error": "No member ID provided!"})
+            
+        if member_id == str(session["user_id"]):
+            return jsonify({"success": False, 
+                            "error": "You cannot change your own privilege level!"})
+        
+        valid_member = db.execute("SELECT user_id FROM team_members WHERE team_id = ? AND user_id = ?", team_id, member_id)
+
+        if not valid_member:
+            return jsonify({"success": False, 
+                            "error": "Member not found in this team!"})
+            
+            
+        member_name = db.execute("SELECT username FROM users WHERE id = ?", member_id)[0]["username"]
+        if new_privilege == "kick":
+            flash(f"Successfully kicked {member_name} from team.")
+            db.execute("DELETE FROM team_members WHERE team_id = ? AND user_id = ?", team_id, member_id)
+
+        # Validate and update member privilege
+        flash(f"Successfully updated {member_name}'s privilege to {new_privilege}!")
+        db.execute("UPDATE team_members SET privilege = ? WHERE team_id = ? AND user_id = ?", new_privilege, team_id, member_id)
+        return jsonify({"success": True})
+    
+    else:
+        return jsonify({"success": False, 
+                        "error": "Only admins can edit member privileges!"})
+
+
+@app.route("/delete_team/<string:team_name>", methods=["POST"])
+@admin_required
+def delete_team(team_name):
+    data = request.get_json()
+    team_id = data.get("team_id")
+
+    privilege = db.execute("SELECT privilege FROM team_members WHERE team_id = ? AND user_id = ?", team_id, session["user_id"])[0]["privilege"]
+
+    if privilege == "admin":
+        db.execute("DELETE FROM teams WHERE id = ?", team_id)
+        flash("Team deleted successfully!")
+        return jsonify({"success": True})
+    
+    else:
+        return jsonify({"success": False, 
+                        "error": "Only admins can delete teams!"})
+
+@app.route("/join_code", methods=["GET", "POST"])
 @login_required
 def join_code():
     """
     Join a team with the given name and code
     """
     
-    data = request.get_json()
-    team_name = data.get("team_name")
-    team_code = data.get("team_code")
+    # If user reached route via POST, join the team
+    if request.method == "POST":
+        data = request.get_json()
+        team_name = data.get("team_name")
+        team_code = data.get("team_code")
 
-    # Check if the provided name and code are valid
-    selected_team_result = db.execute("SELECT id FROM teams WHERE name = ? AND code = ?", team_name, team_code)
-    if selected_team_result:
-        selected_team_id = selected_team_result[0]["id"]
-        already_in_team = db.execute("SELECT 1 FROM team_members WHERE team_id = ? AND user_id = ?", selected_team_id, session["user_id"])
+        # Check if the provided name and code are valid
+        selected_team_result = db.execute("SELECT id FROM teams WHERE name = ? AND code = ?", team_name, team_code)
+        if selected_team_result:
+            selected_team_id = selected_team_result[0]["id"]
+            already_in_team = db.execute("SELECT 1 FROM team_members WHERE team_id = ? AND user_id = ?", selected_team_id, session["user_id"])
+            
+            if already_in_team:
+                return jsonify({"success": False, 
+                                "error": "You are already a member of this team!"})
+            
+            # If all is well create the new team and add the user
+            db.execute("INSERT INTO team_members (team_id, user_id, privilege) VALUES (?, ?, 'read')", selected_team_id, session["user_id"])
+            flash("Successfully joined team!")
+            return jsonify({"success": True})
         
-        if already_in_team:
+        else:
             return jsonify({"success": False, 
-                            "error": "You are already a member of this team!"})
-        
-        # If all is well create the new team and add the user
-        db.execute("INSERT INTO team_members (team_id, user_id, privilege) VALUES (?, ?, 'read')", selected_team_id, session["user_id"])
-        flash("Successfully joined team!")
-        return jsonify({"success": True})
-    
+                            "error": "Invalid team name or code, please make sure you enter the correct information and try again"})
+   
+    # If user reached route via GET, render the teams page but with the join code modal already open
     else:
-        return jsonify({"success": False, 
-                        "error": "Invalid team name or code, please make sure you enter the correct information and try again"})
+        teams = db.execute("""
+            SELECT teams.id, teams.name, teams.description, team_members.privilege, teams.code, teams.access_type, COUNT(team_members.user_id) AS member_count
+            FROM teams
+            LEFT JOIN team_members
+                ON teams.id = team_members.team_id
+            WHERE team_members.user_id = ?
+            GROUP BY teams.id
+            ORDER BY team_members.privilege
+            """, session["user_id"])
+        return render_template("teams.html", teams=teams, method="get_join_code")
 
 @app.route("/leave_team", methods=["POST"])
 @login_required
@@ -560,6 +713,7 @@ def team_page(team_name):
 
     return render_template("team_page.html", topics=topics)
     
+
 """
 Logic and route block end regarding team viewing, team creation, team leaving, and team management.
 """
@@ -573,11 +727,18 @@ Logic and route block end regarding board viewing and management.
 @membership_required
 def board(team_name, topic_name):
     statuses = [
+        {"id": "announcement", "name": "Announcements"},
         {"id": "todo", "name": "To Do"},
         {"id": "doing", "name": "Doing"},
-        {"id": "done", "name": "Done"},
-        {"id": "delete", "name": "DELETE"}
+        {"id": "done", "name": "Done"}
     ]
+    
+    user_privilege = db.execute("""SELECT privilege FROM team_members
+                                JOIN teams ON team_members.team_id = teams.id
+                                WHERE team_members.user_id = ?
+                                AND teams.name = ?""", session["user_id"], team_name)[0]["privilege"]
+    if user_privilege in ['admin', 'edit']:
+        statuses.append({"id": "delete", "name": "DELETE"})
 
     cards = db.execute("""
         SELECT notes.id, notes.content, notes.status, topic_notes.topic_id
@@ -588,7 +749,7 @@ def board(team_name, topic_name):
         JOIN teams ON team_topics.team_id = teams.id
         WHERE teams.name = ?
         AND topics.name = ?
-    """, team_name, topic_name.capitalize())
+    """, team_name, topic_name)
 
     return render_template("board.html", statuses=statuses, cards=cards)
 

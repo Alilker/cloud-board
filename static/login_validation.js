@@ -20,14 +20,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
 
-    // Function to show error modal
-    function showLoginErrorModal(errors) {
+    // Function for displaying errors
+    function showError(message) {
         const errorModal = new bootstrap.Modal(document.querySelector('#error-modal'));
         const errorMessage = document.querySelector('#error-modal .errors');
-
-        const listItems = errors.map(error => `<li>${error}</li>`).join('');
-        errorMessage.innerHTML = `<ul class="mb-0">${listItems}</ul>`;
-
+        errorMessage.innerHTML = message;
         errorModal.show();
     }
 
@@ -57,16 +54,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        window.location.href = data.redirect || '/';
+                        window.location.href = '/';
                     }
                     else {
-                        // Handle errors
-                        const errors = data.error || 'Login failed. Please check your credentials and try again.';
-                        showLoginErrorModal([errors]);
+                        showError(data.error || 'An error occurred, please try again later');
                     }
                 })
                 .catch(error => {
-                    showLoginErrorModal(['A network error occurred. Please try again.']);
+                    console.error(error);
+                    showError('A network error occurred, please try again.');
                 });
             });
         }

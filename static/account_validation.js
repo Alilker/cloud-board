@@ -153,13 +153,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Function to show error modal
-    function showAccountErrorModal(errors) {
+    function showError(message) {
         const errorModal = new bootstrap.Modal(document.querySelector('#error-modal'));
         const errorMessage = document.querySelector('#error-modal .errors');
-        
-        const listItems = errors.map(error => `<li>${error}</li>`).join('');
-        errorMessage.innerHTML = `<ul class="mb-0">${listItems}</ul>`;
-        
+        errorMessage.innerHTML = message;
         errorModal.show();
     }
 
@@ -192,22 +189,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        if (data.redirect) {
-                            window.location.href = '/account';
-                        } 
-                        else {
-                            window.location.reload();
-                        }
+                        window.location.reload();
                     } 
                     else {
-
                         // Handle errors
-                        const errors = data.error || 'An error occurred while updating your account';
-                        showAccountErrorModal([errors]);
+                        showError(data.error || 'An error occurred, please try again!');
                     }
                 })
-                .catch(() => {
-                    showAccountErrorModal(['A network error occurred while updating your account']);
+                .catch(error => {
+                    console.error(error);
+                    showError('A network error occurred, please try again!');
                 });
             });
         }

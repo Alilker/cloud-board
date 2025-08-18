@@ -1,5 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
 
+    // TODO improve teams.html and improve this files readability
+
     // Button declarations
     const createTeamSubmit = document.querySelector('#submit-create-team');
     const joinCodeSubmit = document.querySelector('#join-code-submit');
@@ -56,11 +58,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.location.reload();
             } 
             else {
-                showError(data.error || 'Error leaving team');
+                showError(data.error || 'An error occured, please try again');
             }
         })
-        .catch(() => {
-            showError('Network error occurred');
+        .catch(error => {
+            console.error(error);
+            showError('A network error occurred, please try again!');
         });
     }
 
@@ -70,13 +73,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const confirmationText = document.getElementById('leave-confirmation-text');
         const leaveConfirmButton = document.getElementById('leave-button-confirmation');
         
-        let currentTeamId = null;
+        let teamId = null;
         let currentTeamName = null;
 
         if (leaveModal) {
             leaveModal.addEventListener('show.bs.modal', function (event) {
                 const button = event.relatedTarget;
-                currentTeamId = button.getAttribute('data-team-id');
+                teamId = button.getAttribute('data-team-id');
                 currentTeamName = button.getAttribute('data-team-name');
                 
                 if (confirmationText && currentTeamName) {
@@ -88,8 +91,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Confirmation button click handler
         if (leaveConfirmButton) {
             leaveConfirmButton.addEventListener('click', function() {
-                if (currentTeamId) {
-                    leaveTeam(currentTeamId);
+                if (teamId) {
+                    leaveTeam(teamId);
                 }
             });
         }
@@ -112,14 +115,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        window.location.reload();
+                        window.location.href = '/teams';
                     } 
                     else {
-                        showError(data.error || 'Error joining team');
+                        showError(data.error || 'An error occurred, please try again');
                     }
                 })
-                .catch(() => {
-                    showError('Network error occurred');
+                .catch(error => {
+                    console.error(error);
+                    showError('A network error occurred, please try again!');
                 });
             });
         }
@@ -152,11 +156,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         window.location.reload();
                     } 
                     else {
-                        showError(data.error || 'Error creating team');
+                        showError(data.error || 'An error occurred, please try again later');
                     }
                 })
-                .catch(() => {
-                    showError('Network error occurred');
+                .catch((error) => {
+                    showError('A network error occurred, please try again later');
                 });
             });
         }

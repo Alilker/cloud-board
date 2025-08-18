@@ -1,0 +1,159 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Manage Team
+{% endblock %}
+
+{% block scripts %}
+    <script src="/static/admin_validation.js"></script>
+
+    {% if method == "get_search_member" %}
+    <script>
+        addEventListener('DOMContentLoaded', function() {
+            const edit_members_modal = new bootstrap.Modal(document.getElementById('edit-members-modal'));
+            edit_members_modal.show();
+        });
+    </script>
+    {% endif %}
+
+    <script>
+        let submitMemberChanges;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            submitMemberChanges = document.getElementById('submit-member-changes');
+            submitMemberChanges.disabled = true;
+        });
+
+        function checkboxCountChecker(event) {
+            // Enable only if at least one checkbox is checked
+            const checkedCount = document.querySelectorAll('input[type="checkbox"][name="member-checkbox"]:checked').length;
+            if (submitMemberChanges) {
+                submitMemberChanges.disabled = (checkedCount !== 1);
+            }
+        }
+    </script>
+
+{% endblock %}
+
+{% block main %}
+    <h1 class="text-center mb-4">Edit Team: {{ team.name }}</h1>
+    <input name="team-id" id="team-id" value="{{ team.id }}" hidden>
+    <input name="current-team-name" id="current-team-name" value="{{ team.name }}" hidden>
+
+    {% if team.description %}
+        <p class="card-text"><i>{{ team.description }}</i></p>
+    {% else %}
+        <p class="card-text"><i>No description provided.</i></p>
+    {% endif %}
+    <p class="card-text">Member count: {{ team.member_count }}</p>
+    <p class="card-text">Status: {{ team.access_type.capitalize() }}</p>
+    <p class="card-text">Team Code: {{ team.code }}</p>
+
+    <div class="text-center mb-4">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#edit-team-modal">
+            Edit Team!
+        </button>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#edit-members-modal">
+            Edit members!
+        </button>
+        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delete-teams-modal">
+            DELETE Team!
+        </button>
+    </div>
+
+    <div class="modal fade" id="delete-teams-modal" tabindex="-1" aria-labelledby="delete-teams-modal-label" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="delete-teams-modal-label">Delete Team</h1>
+                    <button type="button" class="btn-close btn" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="delete-confirmation-text">Are you sure you want to delete the team? This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal" id="delete-button-confirmation">Delete Team</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="edit-team-modal" tabindex="-1" aria-labelledby="edit-team-label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="edit-team-label">Edit Team</h1>
+                    <button type="button" class="btn-close btn" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label for="team-name" class="form-label">Team Name<span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="team-name" name="team-name" placeholder="Enter team name" required maxlength="30" minlength="7" autocomplete="off">
+                        </div>
+                        <div class="mb-3">
+                            <label for="team-code" class="form-label">Team Code</label>
+                            <input type="text" class="form-control" id="team-code" name="team-code" placeholder="Enter team code" maxlength="12" minlength="6" autocomplete="off">
+                        </div>
+                        <div class="mb-3">
+                            <label for="team-description" class="form-label">Team Description</label>
+                            <textarea class="form-control" id="team-description" name="team-description" placeholder="Enter description" maxlength="500" autocomplete="off"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="team-access-type" class="form-label">Status</label>
+                            <select class="form-select form-control" id="team-access-type" name="team-access-type">
+                                <option value="public">Public</option>
+                                <option value="private">Private</option>
+                            </select>                            
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <p><i>(If team code is left blank, a random code will be generated)</i></p>
+                    <button type="submit" class="btn btn-primary" id="submit-edit-team" data-bs-dismiss="modal" disabled>Edit Team</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="edit-members-modal" tabindex="-1" aria-labelledby="edit-members-label" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="edit-members-label">Edit Team Members</h1>
+                    <button type="button" class="btn-close btn" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <input type="text" autocomplete="off" class="form-control mb-4 team-search" id="search-input" name="search" placeholder="Search Members...">
+                    </form>
+                    {% if (members | length) > 1 %}
+                        {% for member in members %}
+                            {% if member.user_id != current_user %}
+                            <div class="member-item text-center">
+                                <input type="checkbox" name="member-checkbox" value="{{ member.user_id }}" onclick="checkboxCountChecker(event)">
+                                <p class="d-inline">{{ member.username }}</p>
+                                <select class="form-control text-center mb-4">
+                                    {% for privilege, privilege_name in [('admin', 'Admin'), ('edit', 'Editor'), ('read', 'Board-Editor'), ('kick', 'Kick')] %}
+                                        {% if privilege == member.privilege %}
+                                            <option value="{{ privilege }}" selected="selected">{{ privilege_name }}</option>
+                                        {% else %}
+                                            <option value="{{ privilege }}">{{ privilege_name }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-center"><i>Nothing to see here...</i></p>
+                    {% endif %}
+
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-primary" id="submit-member-changes" data-bs-dismiss="modal">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
