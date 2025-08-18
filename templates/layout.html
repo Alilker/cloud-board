@@ -3,7 +3,6 @@
 <html lang="en">
 
     <head>
-
         <meta charset="utf-8">
         <meta name="viewport" content="initial-scale=1, width=device-width">
 
@@ -19,7 +18,6 @@
         <title>{% block title %}{% endblock %}</title>
 
         {% block scripts %}{% endblock %}
-
     </head>
 
     <body>
@@ -29,6 +27,7 @@
                 <button aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler" data-bs-target="#navbar" data-bs-toggle="collapse" type="button">
                     <span class="navbar-toggler-icon"></span>
                 </button>
+
                 <div class="collapse navbar-collapse" id="navbar">
                     {% if session["user_id"] %}
                         <ul class="navbar-nav me-auto mt-2">
@@ -71,17 +70,18 @@
                         <h1 class="modal-title fs-5 text-danger" id="error-modal-label">Error</h1>
                         <button type="button" class="btn-close btn" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
+
                     <div class="modal-body">
                         <div class="alert alert-danger" role="alert">
                             <div class="mb-0 errors"></div>
                         </div>
                     </div>
+
                     <div class="modal-footer justify-content-center">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>
         </div>
-
     </body>
 </html>

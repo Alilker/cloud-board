@@ -1,8 +1,9 @@
 from flask import render_template, request, session, flash
 from functools import wraps
 from cs50 import SQL
-db = SQL("sqlite:///finance.db")
+db = SQL("sqlite:///teampost.db")
 
+# Login required decorator that is from CS50's Finance problem set.
 def login_required(f):
     """
     Decorate routes to require login.
@@ -19,6 +20,8 @@ def login_required(f):
 
     return decorated_function
 
+
+# Adapted from the login_required decorator to also require membership to the team
 def membership_required(f):
     """
     Decorate route to require team membership
@@ -45,6 +48,8 @@ def membership_required(f):
         
     return decorated_function
 
+
+# Adapted from the login_required decorator to also require admin privileges
 def admin_required(f):
     """
     Decorate route to require admin privileges

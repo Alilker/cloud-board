@@ -156,52 +156,48 @@ document.addEventListener('DOMContentLoaded', function() {
     function showError(message) {
         const errorModal = new bootstrap.Modal(document.querySelector('#error-modal'));
         const errorMessage = document.querySelector('#error-modal .errors');
+
         errorMessage.innerHTML = message;
         errorModal.show();
     }
 
     // Initialize account form submission
     function initializeAccountForm() {
-        if (accountSubmit) {
-            accountSubmit.addEventListener('click', function(event) {
-                event.preventDefault();
+        accountSubmit.addEventListener('click', function(event) {
+            event.preventDefault();
 
-                // Get the form values
-                const username = document.getElementById('username').value;
-                const password = document.getElementById('password').value;
-                const confirmation = document.getElementById('confirmation').value;
-                const currentPassword = document.querySelector('input[name="current_password"]').value;
+            // Get the form values
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const confirmation = document.getElementById('confirmation').value;
+            const currentPassword = document.querySelector('input[name="current_password"]').value;
 
-                // Pack the form data
-                const data = {
-                    username: username,
-                    new_password: password,
-                    confirmation: confirmation,
-                    current_password: currentPassword
-                };
-
-                // Submit form data
-                fetch('/account', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
+            // Submit form data
+            fetch('/account', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    'username': username,
+                    'new_password': password,
+                    'confirmation': confirmation,
+                    'current_password': currentPassword
                 })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        window.location.reload();
-                    } 
-                    else {
-                        // Handle errors
-                        showError(data.error || 'An error occurred, please try again!');
-                    }
-                })
-                .catch(error => {
-                    console.error(error);
-                    showError('A network error occurred, please try again!');
-                });
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } 
+                else {
+                    // Handle errors
+                    showError(data.error || 'An error occurred, please try again!');
+                }
+            })
+            .catch(error => {
+                console
+                showError('A network error occurred, please try again!');
             });
-        }
+        });
     };
 
     // Initialize functionality based on execution order

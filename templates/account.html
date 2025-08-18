@@ -7,32 +7,34 @@
 
 {% endblock %}
 
-
 {% block scripts %}
 
    <script src="/static/account_validation.js"></script>
 
 {% endblock %}
 
-
 {% block main %}
 
     <form id="account-form">
         <p>Input the fields you would like to change, enter current password to confirm changes and click submit.</p>
+
         <div class="mb-3">
             <input autocomplete="off" autofocus class="form-control mx-auto w-auto" id="username" name="username" placeholder="Change username" type="text">
         </div>
         <p id="username-feedback" class="mt-2 username-feedback"></p>
+
         <div class="mb-3">
             <input class="form-control mx-auto w-auto" id="password" name="new_password" placeholder="Change password" type="password"
             pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])\S{8,}" minlength="8" maxlength="20" 
             title="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters">
         </div>
         <p id="password-feedback" class="mt-2 password-feedback"></p>
+        
         <div class="mb-3">
             <input class="form-control mx-auto w-auto" id="confirmation" name="confirmation" placeholder="Confirm new password" type="password">
         </div>
         <p id="confirmation-feedback" class="mt-2 confirmation-feedback"></p>
+
         <div class="mb-3">
             <input class="form-control mx-auto w-auto" name="current_password" placeholder="Enter current password" type="password" required>
         </div>

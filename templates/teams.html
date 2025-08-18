@@ -3,7 +3,7 @@
 
 {% block title %}
 
-    Explore
+    Teams
 
 {% endblock %}
 
@@ -27,7 +27,7 @@
     </script>
     {% endif %}
 
-    <script src="/static/teams.js"></script>
+    <script src="/static/teams_validation.js"></script>
     <script src="/static/pagination.js"></script>
 
 {% endblock %}
@@ -40,10 +40,12 @@
     <form>
         <input type="text" autocomplete="off" class="form-control mb-4 team-search" id="search-input" name="search" placeholder="Search Teams...">
     </form>
+
     <div class="text-center">
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#create-team-modal">
             Create A Team!
         </button>
+
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#join-code-modal">
             Join A Team With Team Code!
         </button>
@@ -55,14 +57,15 @@
 
         {% if your_teams %}
         <div id="your-teams-section">
-            <h2 class="mt-5">Your Teams</h2>
-            <hr>
+            <h2 class="mt-5">Your Teams</h2><hr>
+
             {% for team in your_teams %}
                 <div class="card text-center mb-3">
                     <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2" data-bs-toggle="modal" data-bs-target="#leave-teams-modal" data-team-id="{{ team.id }}" data-team-name="{{ team.name }}" style="z-index: 10;" title="Leave Team">
                         <i>&times;</i>
                     </button>
-                    <div class="card-body" draggable="false">
+
+                    <div class="card-body">
                         <h2 class="card-title">{{ team.name }}</h2>
                         {% if team.description %}
                             <p class="card-text"><i>{{ team.description }}</i></p>
@@ -72,6 +75,7 @@
                         <p class="card-text">Member count: {{ team.member_count }}</p>
                         <p class="card-text">Status: {{ team.access_type.capitalize() }}</p>
                         <p class="card-text">Team Code: {{ team.code }}</p>
+
                         <a href="/team/{{ team.name }}" class="btn btn-primary mb-2">View team!</a>
                         <button class="btn btn-success mb-2">Edit Team!</button>
                         {% if team.privilege == "admin" %}
@@ -85,13 +89,14 @@
 
         {% if other_teams %}
         <div id="other-teams-section">
-            <h2 class="mt-5">Other Teams</h2>
-            <hr>
+            <h2 class="mt-5">Other Teams</h2><hr>
+
             {% for team in other_teams %}
                 <div class="card text-center mb-3 position-relative">
-                    <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2" data-bs-toggle="modal" data-bs-target="#leave-teams-modal" data-team-id="{{ team.id }}" data-team-name="{{ team.name }}" style="z-index: 10;" title="Leave Team">
+                    <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2" data-bs-toggle="modal" data-bs-target="#leave-teams-modal" data-team-name="{{ team.name }}" data-team-id="{{ team.id }}">
                         <i>&times;</i>
                     </button>
+
                     <div class="card-body">
                           <h2 class="card-title">{{ team.name }}</h2>
                         {% if team.description %}
@@ -104,8 +109,8 @@
                         {% if team.access_type == "public" %}
                             <p class="card-text">Team Code: {{ team.code }}</p>
                         {% endif %}
+
                         <a href="/team/{{ team.name }}" class="btn btn-primary mb-2">View team!</a>
-                        <input type="hidden" name="team[]" value="{{ team.id }}">
                     </div>
                 </div>
             {% endfor %}
@@ -117,6 +122,11 @@
         {% endif %}
     </div>
 
+    <ul class="pagination justify-content-center" hidden>
+        <li class="page-item"><button class="page-link btn btn-secondary me-1" id="prev-btn">Previous</button></li>
+        <li class="page-item"><span class="page-link" id="page-info"></span></li>
+        <li class="page-item"><button class="page-link btn btn-secondary ms-1" id="next-btn">Next</button></li>
+    </ul>
 
     <div id="modal-section">
         <div class="modal fade" id="create-team-modal" tabindex="-1" aria-labelledby="create-team-label" aria-hidden="true">
@@ -200,11 +210,5 @@
             </div>
         </div>
     </div>
-
-    <ul class="pagination justify-content-center" hidden>
-        <li class="page-item"><button class="page-link btn btn-secondary me-1" id="prev-btn">Previous</button></li>
-        <li class="page-item"><span class="page-link" id="page-info"></span></li>
-        <li class="page-item"><button class="page-link btn btn-secondary ms-1" id="next-btn">Next</button></li>
-    </ul>
 
 {% endblock %}

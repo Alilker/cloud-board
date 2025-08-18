@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateLoginSubmit() {
         const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value.trim();
+        
         loginSubmit.disabled = !(username && password);
     }
 
@@ -24,48 +25,47 @@ document.addEventListener('DOMContentLoaded', function() {
     function showError(message) {
         const errorModal = new bootstrap.Modal(document.querySelector('#error-modal'));
         const errorMessage = document.querySelector('#error-modal .errors');
+
         errorMessage.innerHTML = message;
         errorModal.show();
     }
 
     // Function for login form submission initialization
     function initializeLoginForm() {
-        if (loginSubmit) {
-            loginSubmit.addEventListener('click', function(event) {
-                event.preventDefault();
+        loginSubmit.addEventListener('click', function(event) {
+            event.preventDefault();
 
-                // Get the form values
-                const username = document.getElementById('username').value;
-                const password = document.getElementById('password').value;
+            // Get the form values
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
 
 
-                // Pack the form data
-                const data = {
-                    username: username,
-                    password: password,
-                };
+            // Pack the form data
+            const data = {
+                username: username,
+                password: password,
+            };
 
-                // Submit form data
-                fetch('/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        window.location.href = '/';
-                    }
-                    else {
-                        showError(data.error || 'An error occurred, please try again later');
-                    }
-                })
-                .catch(error => {
-                    console.error(error);
-                    showError('A network error occurred, please try again.');
-                });
+            // Submit form data
+            fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '/';
+                }
+                else {
+                    showError(data.error || 'An error occurred, please try again later');
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                showError('A network error occurred, please try again.');
             });
-        }
+        });
     };
 
     // Initialize functionality based on execution order

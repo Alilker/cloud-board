@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function() {
         element.classList.add('text-feedback');
     }
 
-    // Function for validating inputted password real time
+    // Function for validating inputted password in real time
     function validatePassword() {
         const password = document.getElementById('password').value;
         const element = document.getElementById('password-feedback');
@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
         validatePasswordConfirmation();
     }
 
-    // Function for password confirmation validation
+    // Function for password confirmation validation in real time
     function validatePasswordConfirmation() {
         const password = document.getElementById('password').value;
         const confirmation = document.getElementById('confirmation').value;
@@ -124,50 +124,46 @@ document.addEventListener('DOMContentLoaded', function() {
     function showError(message) {
         const errorModal = new bootstrap.Modal(document.querySelector('#error-modal'));
         const errorMessage = document.querySelector('#error-modal .errors');
+
         errorMessage.innerHTML = message;
         errorModal.show();
     }
 
     // Initialize register form submission
     function initializeRegisterForm() {
-        if (registerSubmit) {
-            registerSubmit.addEventListener('click', function(event) {
-                event.preventDefault();
+        registerSubmit.addEventListener('click', function(event) {
+            event.preventDefault();
 
-                // Get the form values
-                const username = document.getElementById('username').value;
-                const password = document.getElementById('password').value;
-                const confirmation = document.getElementById('confirmation').value;
+            // Get the form values
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const confirmation = document.getElementById('confirmation').value;
 
-                // Pack form values
-                const data = {
-                    username: username,
-                    password: password,
-                    confirmation: confirmation
-                };
-
-                // Submit form data
-                fetch('/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
+            // Submit form data
+            fetch('/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    'username': username,
+                    'password': password,
+                    'confirmation': confirmation
                 })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        window.location.href = '/';
-                    } 
-                    else {
-                        // Handle errors
-                        showError(data.error || 'Registration failed. Please try again.');
-                    }
-                })
-                .catch(error => {
-                    console.error(error);
-                    showError('A network error occurred, please try again!');
-                });
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '/';
+                } 
+                else {
+                    // Handle errors
+                    showError(data.error || 'Registration failed. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                showError('A network error occurred, please try again!');
             });
-        };
+        });
     }
 
     // Initialize functionality based on execution order
