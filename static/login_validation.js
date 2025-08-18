@@ -1,6 +1,16 @@
 document.addEventListener('DOMContentLoaded', function() {
-    
+
+    // Button declarations
     const loginSubmit = document.querySelector('#login-submit');
+
+    // Function to listen for input changes and validate
+    function listenForInputChanges() {
+        document.addEventListener('input', function(event) {
+            if (event.target.id === 'username' || event.target.id === 'password') {
+                updateLoginSubmit();
+            }
+        });
+    }
 
     // Function for login button state management
     function updateLoginSubmit() {
@@ -62,14 +72,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // Set initial button state
+    // Initialize functionality based on execution order
+    listenForInputChanges();
     updateLoginSubmit();
     initializeLoginForm();
-
-    // Listen for input changes
-    document.addEventListener('input', function(event) {
-        if (event.target.id === 'username' || event.target.id === 'password') {
-            updateLoginSubmit();
-        }
-    });
 });

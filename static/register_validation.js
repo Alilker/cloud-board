@@ -1,6 +1,27 @@
 document.addEventListener('DOMContentLoaded', function() {
 
+    // Button declarations
     const registerSubmit = document.querySelector('#register-submit');
+
+    // Function to listen for input changes and validate
+    function listenForInputChanges() {
+        document.addEventListener('input', function(event) {
+            const inputId = event.target.id;
+
+            if (inputId === 'username') {
+                validateUsername();
+                updateRegisterSubmit();
+            } 
+            else if (inputId === 'password') {
+                validatePassword();
+                updateRegisterSubmit();
+            } 
+            else if (inputId === 'confirmation') {
+                validatePasswordConfirmation();
+                updateRegisterSubmit();
+            }
+        });
+    };
 
     // Function for register button state management
     function updateRegisterSubmit() {
@@ -99,26 +120,6 @@ document.addEventListener('DOMContentLoaded', function() {
         element.classList.add('text-feedback');
     }
 
-    // Listen for input changes and validate
-    function validateInput() {
-        document.addEventListener('input', function(event) {
-            const inputId = event.target.id;
-
-            if (inputId === 'username') {
-                validateUsername();
-                updateRegisterSubmit();
-            } 
-            else if (inputId === 'password') {
-                validatePassword();
-                updateRegisterSubmit();
-            } 
-            else if (inputId === 'confirmation') {
-                validatePasswordConfirmation();
-                updateRegisterSubmit();
-            }
-        });
-    };
-
     // Function to show error modal
     function showRegisterErrorModal(errors) {
         const errorModal = new bootstrap.Modal(document.querySelector('#error-modal'));
@@ -160,6 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         window.location.href = data.redirect || '/';
                     } 
                     else {
+
                         // Handle errors
                         const errors = data.error || 'Registration failed. Please try again.';
                         showRegisterErrorModal([errors]);
@@ -172,8 +174,8 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     }
 
-    // Set initial button state
-    validateInput();
+    // Initialize functionality based on execution order
+    listenForInputChanges();
     updateRegisterSubmit();
     initializeRegisterForm();
 });

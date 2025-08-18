@@ -1,6 +1,31 @@
 document.addEventListener('DOMContentLoaded', function() {
 
+    // Button declarations
     const accountSubmit = document.querySelector('#account-submit');
+
+    // Function to listen for input changes and validate
+    function listenForInputChanges() {
+        document.addEventListener('input', function(event) {
+            const inputId = event.target.id;
+            const inputName = event.target.name;
+
+            if (inputId === 'username') {
+                validateUsername();
+                updateAccountSubmit();
+            } 
+            else if (inputId === 'password') {
+                validatePassword();
+                updateAccountSubmit();
+            } 
+            else if (inputId === 'confirmation') {
+                validatePasswordConfirmation();
+                updateAccountSubmit();
+            } 
+            else if (inputName === 'current_password') {
+                updateAccountSubmit();
+            }
+        });
+    };
 
     // Function for account button state management
     function updateAccountSubmit() {
@@ -19,10 +44,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // For confirmation: only check if password is being changed
         let confirmationValid = true;
         if (password) {
+
             // If password is entered, confirmation must be provided and match
             confirmationValid = confirmation && document.getElementById('confirmation-feedback').innerHTML.includes('Passwords match!');
         }
          else if (confirmation) {
+
             // If confirmation is entered but no password, it's invalid
             confirmationValid = false;
         }
@@ -125,30 +152,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Function to listen for input changes and validate
-    function listenForInputChanges() {
-        document.addEventListener('input', function(event) {
-            const inputId = event.target.id;
-            const inputName = event.target.name;
-
-            if (inputId === 'username') {
-                validateUsername();
-                updateAccountSubmit();
-            } 
-            else if (inputId === 'password') {
-                validatePassword();
-                updateAccountSubmit();
-            } 
-            else if (inputId === 'confirmation') {
-                validatePasswordConfirmation();
-                updateAccountSubmit();
-            } 
-            else if (inputName === 'current_password') {
-                updateAccountSubmit();
-            }
-        });
-    };
-
     // Function to show error modal
     function showAccountErrorModal(errors) {
         const errorModal = new bootstrap.Modal(document.querySelector('#error-modal'));
@@ -197,6 +200,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     } 
                     else {
+
                         // Handle errors
                         const errors = data.error || 'An error occurred while updating your account';
                         showAccountErrorModal([errors]);
@@ -208,7 +212,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     };
-    // Set initial button state
+
+    // Initialize functionality based on execution order
     listenForInputChanges();
     updateAccountSubmit();
     initializeAccountForm();

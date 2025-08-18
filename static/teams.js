@@ -4,6 +4,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const createTeamSubmit = document.querySelector('#submit-create-team');
     const joinCodeSubmit = document.querySelector('#join-code-submit');
 
+    // Function to listen for input changes and validate
+    function listenForInputChanges() {
+        document.addEventListener('input', function(event) {
+            if (event.target.id === 'team-name' || event.target.id === 'team-code' || event.target.id === 'team-description') {
+                updateCreateSubmit();
+            } 
+            else if (event.target.id === 'join-team-name' || event.target.id === 'join-team-code') {
+                updateJoinSubmit();
+            }
+        });
+    }
+
     // Function for create team button state management
     function updateCreateSubmit() {
         const teamName = document.getElementById('team-name')?.value.trim() || '';
@@ -23,7 +35,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Function for error display using Bootstrap modal
+    // Function for displaying errors
     function showError(message) {
         const errorModal = new bootstrap.Modal(document.querySelector('#error-modal'));
         const errorMessage = document.querySelector('#error-modal .errors');
@@ -150,21 +162,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Input change listeners for button states
-    document.addEventListener('input', function(event) {
-        if (event.target.id === 'team-name' || event.target.id === 'team-code' || event.target.id === 'team-description') {
-            updateCreateSubmit();
-        } 
-        else if (event.target.id === 'join-team-name' || event.target.id === 'join-team-code') {
-            updateJoinSubmit();
-        }
-    });
-
     // Initialize functionality
-    initializeLeaveTeamModal();
+    listenForInputChanges();
     initializeJoinTeam();
     initializeCreateTeam();
-    updateCreateSubmit();
+    initializeLeaveTeamModal();
     updateJoinSubmit();
-
+    updateCreateSubmit();
 });

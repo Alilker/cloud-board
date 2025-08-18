@@ -557,8 +557,6 @@ Logic and route block end regarding team viewing, team creation, team leaving, a
 """
 Logic and route block end regarding board viewing and management.
 """
-
-
 @app.route("/team/<string:team_name>/topic/<string:topic_name>")
 @membership_required
 def board(team_name, topic_name):
@@ -596,8 +594,6 @@ def move_note():
         db.execute("UPDATE notes SET status = ? WHERE id = ?", new_status, note_id)
 
     return jsonify({"status": "success"})
-
-
 """
 Logic and route block end regarding board viewing and management.
 """
