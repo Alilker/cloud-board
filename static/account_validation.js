@@ -1,9 +1,8 @@
 document.addEventListener('DOMContentLoaded', function() {
 
     const accountSubmit = document.querySelector('#account-submit');
-    const accountValidation = { username: true, password: true, confirmation: true };
 
-    // Button state management with validation state
+    // Function for account button state management
     function updateAccountSubmit() {
         const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value.trim();
@@ -12,42 +11,86 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Need current password and at least one change
         const hasChanges = username || password;
-        const allValid = accountValidation.username && accountValidation.password && accountValidation.confirmation;
         
-        accountSubmit.disabled = !(currentPassword && hasChanges && allValid);
+        // Check if validations pass for fields that have values
+        const usernameValid = !username || document.getElementById('username-feedback').innerHTML.includes('Looks Good!');
+        const passwordValid = !password || document.getElementById('password-feedback').innerHTML.includes('Looks Good!');
+        
+        // For confirmation: only check if password is being changed
+        let confirmationValid = true;
+        if (password) {
+            // If password is entered, confirmation must be provided and match
+            confirmationValid = confirmation && document.getElementById('confirmation-feedback').innerHTML.includes('Passwords match!');
+        }
+         else if (confirmation) {
+            // If confirmation is entered but no password, it's invalid
+            confirmationValid = false;
+        }
+        
+        // Enable button only if current password provided, has changes, AND all validations pass
+        accountSubmit.disabled = !(currentPassword && hasChanges && usernameValid && passwordValid && confirmationValid);
     }
 
-    // Function for validating inputted fields
-    function validateInput(url, payload, feedbackElementId, key, updateFunction) {
-        fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        })
-        .then(res => res.json())
-        .then(data => {
-            const element = document.getElementById(feedbackElementId);
-            
-            if (data.success) {
-                element.innerHTML = "<i class='text-success'><strong>Looks Good!</strong></i>";
-            } 
-            else {
-                element.innerHTML = `<i class='text-danger'><strong>${data.error}</strong></i>`;
-            }
-            
-            accountValidation[key] = !!data.success;
-            updateFunction();
-            element.classList.add('text-feedback');
-        })
-        .catch(error => {
-            console.error('Validation error:', error);
-            const element = document.getElementById(feedbackElementId);
-            element.innerHTML = "<i class='text-danger'><strong>Network error occurred. Please try again later.</strong></i>";
-            element.classList.add('text-feedback');
-        });
+    // Function for validating username in real time (optional field for account changes)
+    function validateUsername() {
+        const username = document.getElementById('username').value.trim();
+        const element = document.getElementById('username-feedback');
+        
+        if (!username) {
+            element.innerHTML = "";
+            element.classList.remove('text-feedback');
+            return;
+        }
+        
+        const usernameLength = username.length;
+        if (usernameLength < 5) {
+            element.innerHTML = `<i class='text-danger'><strong>Username is ${usernameLength} characters, must be at least 5 characters</strong></i>`;
+        } 
+        else if (usernameLength > 15) {
+            element.innerHTML = `<i class='text-danger'><strong>Username is ${usernameLength} characters, limit is 15</strong></i>`;
+        } 
+        else {
+            element.innerHTML = "<i class='text-success'><strong>Looks Good!</strong></i>";
+        }
+        
+        element.classList.add('text-feedback');
     }
 
-    // Function for validating password confirmation
+    // Function for validating password in real time (optional field for account changes)
+    function validatePassword() {
+        const password = document.getElementById('password').value;
+        const element = document.getElementById('password-feedback');
+        
+        if (!password) {
+            element.innerHTML = "";
+            element.classList.remove('text-feedback');
+            return;
+        }
+
+        // Password must contain 8 characters, at least one number, one uppercase letter, and one lowercase letter with no spaces
+        const pattern = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z])\S{8,}/;
+        const passwordLength = password.length;
+        
+        if (passwordLength < 8) {
+            element.innerHTML = `<i class='text-danger'><strong>Password is ${passwordLength} characters, must be at least 8 characters</strong></i>`;
+        } 
+        else if (passwordLength > 20) {
+            element.innerHTML = `<i class='text-danger'><strong>Password is ${passwordLength} characters, limit is 20</strong></i>`;
+        } 
+        else if (!pattern.test(password)) {
+            element.innerHTML = "<i class='text-danger'><strong>Password must contain 8 characters, at least one number, one uppercase letter, and one lowercase letter, with no spaces</strong></i>";
+        } 
+        else {
+            element.innerHTML = "<i class='text-success'><strong>Looks Good!</strong></i>";
+        }
+        
+        element.classList.add('text-feedback');
+        
+        // Re-validate confirmation when password changes
+        validatePasswordConfirmation();
+    }
+
+    // Function for validating password confirmation in real time
     function validatePasswordConfirmation() {
         const password = document.getElementById('password').value;
         const confirmation = document.getElementById('confirmation').value;
@@ -57,135 +100,116 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!password && !confirmation) {
             element.innerHTML = "";
             element.classList.remove('text-feedback');
-            accountValidation.confirmation = true;
         } 
 
         // If password is provided but no confirmation
         else if (password && !confirmation) {
             element.innerHTML = "<i class='text-danger'><strong>Please confirm your new password</strong></i>";
-            accountValidation.confirmation = false;
             element.classList.add('text-feedback');
         }
 
         // If confirmation is provided but no password
         else if (!password && confirmation) {
             element.innerHTML = "<i class='text-danger'><strong>Please enter a new password first</strong></i>";
-            accountValidation.confirmation = false;
             element.classList.add('text-feedback');
         }
 
         // If both are provided, check if they match
         else if (password !== confirmation) {
             element.innerHTML = "<i class='text-danger'><strong>Passwords do not match</strong></i>";
-            accountValidation.confirmation = false;
             element.classList.add('text-feedback');
         } 
         else {
             element.innerHTML = "<i class='text-success'><strong>Passwords match!</strong></i>";
-            accountValidation.confirmation = true;
             element.classList.add('text-feedback');
         }
-        
-        updateAccountSubmit();
     }
 
-    // Listen for input changes and validate
-    document.addEventListener('input', function(event) {
-        const inputValue = event.target.value;
-        const inputId = event.target.id;
-        const inputName = event.target.name;
+    // Function to listen for input changes and validate
+    function listenForInputChanges() {
+        document.addEventListener('input', function(event) {
+            const inputId = event.target.id;
+            const inputName = event.target.name;
 
-        if (inputId === 'username') {
-            validateInput('/account_check_username', {'username': inputValue}, 'username-feedback',
-                'username', updateAccountSubmit);
-        } 
-        else if (inputId === 'password') {
-            validateInput('/account_check_password', {'password': inputValue}, 'password-feedback',
-                'password', updateAccountSubmit);
-            
-            // Also validate confirmation when password changes
-            validatePasswordConfirmation();
-        } 
-        else if (inputId === 'confirmation') {
-            validatePasswordConfirmation();
-        } 
-        else if (inputName === 'current_password') {
-            updateAccountSubmit();
-        }
-    });
-
-    // Set initial button state
-    updateAccountSubmit();
+            if (inputId === 'username') {
+                validateUsername();
+                updateAccountSubmit();
+            } 
+            else if (inputId === 'password') {
+                validatePassword();
+                updateAccountSubmit();
+            } 
+            else if (inputId === 'confirmation') {
+                validatePasswordConfirmation();
+                updateAccountSubmit();
+            } 
+            else if (inputName === 'current_password') {
+                updateAccountSubmit();
+            }
+        });
+    };
 
     // Function to show error modal
     function showAccountErrorModal(errors) {
         const errorModal = new bootstrap.Modal(document.querySelector('#error-modal'));
         const errorMessage = document.querySelector('#error-modal .errors');
         
-        // Handle both single error strings and arrays of errors
-        if (Array.isArray(errors)) {
-            if (errors.length > 1) {
-                const listItems = errors.map(error => `<li>${error}</li>`).join('');
-                errorMessage.innerHTML = `<div class="alert alert-danger"><ul class="mb-0">${listItems}</ul></div>`;
-            } else if (errors.length === 1) {
-                errorMessage.innerHTML = `<div class="alert alert-danger">${errors[0]}</div>`;
-            } else {
-                errorMessage.innerHTML = `<div class="alert alert-danger">An error occurred while updating your account.</div>`;
-            }
-        } else {
-            // Handle single error string (backward compatibility)
-            errorMessage.innerHTML = `<div class="alert alert-danger">${errors}</div>`;
-        }
+        const listItems = errors.map(error => `<li>${error}</li>`).join('');
+        errorMessage.innerHTML = `<ul class="mb-0">${listItems}</ul>`;
         
         errorModal.show();
     }
 
     // Initialize account form submission
-    if (accountSubmit) {
-        accountSubmit.addEventListener('click', function(event) {
-            event.preventDefault();
+    function initializeAccountForm() {
+        if (accountSubmit) {
+            accountSubmit.addEventListener('click', function(event) {
+                event.preventDefault();
 
-            // Get the form values
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const confirmation = document.getElementById('confirmation').value;
-            const currentPassword = document.querySelector('input[name="current_password"]').value;
+                // Get the form values
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                const confirmation = document.getElementById('confirmation').value;
+                const currentPassword = document.querySelector('input[name="current_password"]').value;
 
-            // Pack the form data
-            const data = {
-                username: username,
-                password: password,
-                confirmation: confirmation,
-                current_password: currentPassword
-            };
+                // Pack the form data
+                const data = {
+                    username: username,
+                    new_password: password,
+                    confirmation: confirmation,
+                    current_password: currentPassword
+                };
 
-            // Submit form data
-            fetch('/account', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    if (data.redirect) {
-                        window.location.href = '/account';
+                // Submit form data
+                fetch('/account', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.redirect) {
+                            window.location.href = '/account';
+                        } 
+                        else {
+                            window.location.reload();
+                        }
                     } 
                     else {
-                        window.location.reload();
+                        // Handle errors
+                        const errors = data.error || 'An error occurred while updating your account';
+                        showAccountErrorModal([errors]);
                     }
-                } 
-                else {
-                    // Handle both single error and multiple errors from server
-                    const errors = data.errors || [data.error] || ['An error occurred while updating your account'];
-                    showAccountErrorModal(errors);
-                }
-            })
-            .catch(error => {
-                console.error('Fetch error:', error);
-                showAccountErrorModal(['A network error occurred while updating your account']);
+                })
+                .catch(() => {
+                    showAccountErrorModal(['A network error occurred while updating your account']);
+                });
             });
-        });
-    }
-
+        }
+    };
+    // Set initial button state
+    listenForInputChanges();
+    updateAccountSubmit();
+    initializeAccountForm();
 });

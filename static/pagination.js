@@ -25,6 +25,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const nextButton = document.getElementById('next-btn');
     const pageInfo = document.getElementById('page-info');
     
+    // Function that updates section visibility based on visible cards
+    function updateSectionVisibility(sectionId) {
+
+        const section = document.getElementById(sectionId);
+        if (section) {
+            const cards = section.querySelectorAll('.card');
+            const hasVisibleCards = Array.from(cards).some(card => 
+                card.style.display !== 'none'
+            );
+            section.style.display = hasVisibleCards ? 'block' : 'none';
+        }
+    }
+    
     // Show page function
     function showPage(page) {
         const start = (page - 1) * itemsPerPage;
@@ -34,13 +47,26 @@ document.addEventListener('DOMContentLoaded', function() {
             item.style.display = (index >= start && index < end) ? 'block' : 'none';
         });
         
+        // Update section visibility
+        updateSectionVisibility('your-teams-section');
+        updateSectionVisibility('other-teams-section');
+        
+        // Show/hide existing "nothing to show" message
+        const hasVisibleCards = Array.from(items).some(card => card.style.display !== 'none');
+        const teamRelated = document.getElementById('team-related');
+        const existingMessage = teamRelated.querySelector('p:last-child');
+        
+        if (existingMessage && existingMessage.textContent.includes('Nothing to show here')) {
+            existingMessage.style.display = hasVisibleCards ? 'none' : 'block';
+        }
+        
         // Update pagination info
         pageInfo.textContent = `Page ${page} of ${totalPages}`;
         prevButton.disabled = page === 1;
         nextButton.disabled = page === totalPages;
     }
-    
-    // Event listeners
+
+    // Event listeners to increment or decrement current page
     prevButton.addEventListener('click', () => {
         if (currentPage > 1) {
             currentPage--;

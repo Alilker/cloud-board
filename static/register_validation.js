@@ -1,159 +1,179 @@
 document.addEventListener('DOMContentLoaded', function() {
 
     const registerSubmit = document.querySelector('#register-submit');
-    const registerValidation = { username: false, password: false, confirmation: false };
 
-    // Button state management with validation state
+    // Function for register button state management
     function updateRegisterSubmit() {
         const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value.trim();
         const confirmation = document.getElementById('confirmation').value.trim();
         
-        // All fields must be filled and valid
-        const hasAllFields = username && password && confirmation;
-        const allValid = registerValidation.username && registerValidation.password && registerValidation.confirmation;
+        // Check if all fields are filled
+        const allFieldsFilled = username && password && confirmation;
         
-        registerSubmit.disabled = !(hasAllFields && allValid);
+        // Check if all validations pass (show "Looks Good!")
+        const usernameValid = !username || document.getElementById('username-feedback').innerHTML.includes('Looks Good!');
+        const passwordValid = !password || document.getElementById('password-feedback').innerHTML.includes('Looks Good!');
+        const confirmationValid = !confirmation || document.getElementById('confirmation-feedback').innerHTML.includes('Passwords match!');
+        
+        // Enable button only if all fields are filled AND all validations pass
+        registerSubmit.disabled = !(allFieldsFilled && usernameValid && passwordValid && confirmationValid);
     }
 
-    // Function for validating inputted fields
-    function validateInput(url, payload, feedbackElementId, key, updateFunction) {
-        fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        })
-        .then(res => res.json())
-        .then(data => {
-            const element = document.getElementById(feedbackElementId);
-            
-            // Output based on success
-            if (data.success) {
-                element.innerHTML = "<i class='text-success'><strong>Looks Good!</strong></i>";
-            } 
-            else {
-                element.innerHTML = `<i class='text-danger'><strong>${data.error}</strong></i>`;
-            }
-
-            // Update button status via validation state
-            registerValidation[key] = !!data.success;
-            updateFunction();
-            element.classList.add('text-feedback');
-        })
-        .catch(error => {
-            console.error('Validation error:', error);
-            const element = document.getElementById(feedbackElementId);
-            element.innerHTML = "<i class='text-danger'><strong>Network error occurred. Please try again later.</strong></i>";
-            element.classList.add('text-feedback');
-        });
+    // Function for validating username in real time
+    function validateUsername() {
+        const username = document.getElementById('username').value.trim();
+        const element = document.getElementById('username-feedback');
+        
+        if (!username) {
+            element.innerHTML = "";
+            element.classList.remove('text-feedback');
+            return;
+        }
+        
+        if (username.length < 5) {
+            element.innerHTML = "<i class='text-danger'><strong>Username must be at least 5 characters</strong></i>";
+        } 
+        else if (username.length > 15) {
+            element.innerHTML = "<i class='text-danger'><strong>Username must be 15 characters or less</strong></i>";
+        } 
+        else {
+            element.innerHTML = "<i class='text-success'><strong>Looks Good!</strong></i>";
+        }
+        
+        element.classList.add('text-feedback');
     }
 
-    // Password confirmation validation
+    // Function for validating inputted password real time
+    function validatePassword() {
+        const password = document.getElementById('password').value;
+        const element = document.getElementById('password-feedback');
+        
+        if (!password) {
+            element.innerHTML = "";
+            element.classList.remove('text-feedback');
+            return;
+        }
+
+        // Password must contain 8 characters, at least one number, one uppercase letter, and one lowercase letter with no spaces
+        const pattern = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z])\S{8,}/;
+        
+        if (password.length < 8) {
+            element.innerHTML = "<i class='text-danger'><strong>Password must be at least 8 characters</strong></i>";
+        } 
+        else if (password.length > 20) {
+            element.innerHTML = "<i class='text-danger'><strong>Password must be 20 characters or less</strong></i>";
+        } 
+        else if (!pattern.test(password)) {
+            element.innerHTML = "<i class='text-danger'><strong>Password must contain 8 characters, at least one number, one uppercase letter, and one lowercase letter, with no spaces</strong></i>";
+        } 
+        else {
+            element.innerHTML = "<i class='text-success'><strong>Looks Good!</strong></i>";
+        }
+        
+        element.classList.add('text-feedback');
+        
+        // Re-validate confirmation when password changes
+        validatePasswordConfirmation();
+    }
+
+    // Function for password confirmation validation
     function validatePasswordConfirmation() {
         const password = document.getElementById('password').value;
         const confirmation = document.getElementById('confirmation').value;
         const element = document.getElementById('confirmation-feedback');
         
         if (!confirmation) {
-            element.innerHTML = "<i class='text-danger'><strong>Password confirmation is required</strong></i>";
-            registerValidation.confirmation = false;
-        } 
-        else if (password !== confirmation) {
+            element.innerHTML = "";
+            element.classList.remove('text-feedback');
+            return;
+        }
+        
+        if (password !== confirmation) {
             element.innerHTML = "<i class='text-danger'><strong>Passwords do not match</strong></i>";
-            registerValidation.confirmation = false;
         } 
         else {
             element.innerHTML = "<i class='text-success'><strong>Passwords match!</strong></i>";
-            registerValidation.confirmation = true;
         }
         
         element.classList.add('text-feedback');
-        updateRegisterSubmit();
     }
 
     // Listen for input changes and validate
-    document.addEventListener('input', function(event) {
-        const inputValue = event.target.value;
-        const inputId = event.target.id;
+    function validateInput() {
+        document.addEventListener('input', function(event) {
+            const inputId = event.target.id;
 
-        if (inputId === 'username') {
-            validateInput('/register_check_username', {'username': inputValue}, 'username-feedback',
-                'username', updateRegisterSubmit);
-        } 
-        else if (inputId === 'password') {
-            validateInput('/register_check_password', {'password': inputValue}, 'password-feedback',
-                'password', updateRegisterSubmit);
-        } 
-        else if (inputId === 'confirmation') {
-            validatePasswordConfirmation();
-        }
-    });
-
-    // Set initial button state
-    updateRegisterSubmit();
+            if (inputId === 'username') {
+                validateUsername();
+                updateRegisterSubmit();
+            } 
+            else if (inputId === 'password') {
+                validatePassword();
+                updateRegisterSubmit();
+            } 
+            else if (inputId === 'confirmation') {
+                validatePasswordConfirmation();
+                updateRegisterSubmit();
+            }
+        });
+    };
 
     // Function to show error modal
     function showRegisterErrorModal(errors) {
         const errorModal = new bootstrap.Modal(document.querySelector('#error-modal'));
         const errorMessage = document.querySelector('#error-modal .errors');
-        
-        // Handle both single error strings and arrays of errors
-        if (Array.isArray(errors)) {
-            if (errors.length > 1) {
-                const listItems = errors.map(error => `<li>${error}</li>`).join('');
-                errorMessage.innerHTML = `<div class="alert alert-danger"><ul class="mb-0">${listItems}</ul></div>`;
-            } else if (errors.length === 1) {
-                errorMessage.innerHTML = `<div class="alert alert-danger">${errors[0]}</div>`;
-            } else {
-                errorMessage.innerHTML = `<div class="alert alert-danger">Registration failed. Please try again.</div>`;
-            }
-        } else {
-            // Handle single error string (backward compatibility)
-            errorMessage.innerHTML = `<div class="alert alert-danger">${errors}</div>`;
-        }
-        
+
+        const listItems = errors.map(error => `<li>${error}</li>`).join('');
+        errorMessage.innerHTML = `<ul class="mb-0">${listItems}</ul>`;
+
         errorModal.show();
     }
 
     // Initialize register form submission
-    if (registerSubmit) {
-        registerSubmit.addEventListener('click', function(event) {
-            event.preventDefault();
+    function initializeRegisterForm() {
+        if (registerSubmit) {
+            registerSubmit.addEventListener('click', function(event) {
+                event.preventDefault();
 
-            // Get the form values
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const confirmation = document.getElementById('confirmation').value;
+                // Get the form values
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                const confirmation = document.getElementById('confirmation').value;
 
-            // Pack form values
-            const data = {
-                username: username,
-                password: password,
-                confirmation: confirmation
-            };
+                // Pack form values
+                const data = {
+                    username: username,
+                    password: password,
+                    confirmation: confirmation
+                };
 
-            // Submit form data
-            fetch('/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    window.location.href = data.redirect || '/';
-                } 
-                else {
-                    // Handle both single error and multiple errors from server
-                    const errors = data.errors || [data.error] || ['Registration failed. Please try again.'];
-                    showRegisterErrorModal(errors);
-                }
-            })
-            .catch(error => {
-                console.error('Register error:', error);
-                showRegisterErrorModal(['A network error occurred during registration']);
+                // Submit form data
+                fetch('/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = data.redirect || '/';
+                    } 
+                    else {
+                        // Handle errors
+                        const errors = data.error || 'Registration failed. Please try again.';
+                        showRegisterErrorModal([errors]);
+                    }
+                })
+                .catch(() => {
+                    showRegisterErrorModal(['A network error occurred during registration']);
+                });
             });
-        });
+        };
     }
 
+    // Set initial button state
+    validateInput();
+    updateRegisterSubmit();
+    initializeRegisterForm();
 });

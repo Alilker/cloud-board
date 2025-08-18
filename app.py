@@ -71,7 +71,7 @@ def login():
             rows[0]["hash"], password
         ):
             return jsonify({"success": False, 
-                            "error": "invalid username and/or password"})
+                            "error": "Invalid username and/or password"})
 
         # Remember which user has logged in
         session["user_id"] = rows[0]["id"]
@@ -170,71 +170,6 @@ def register():
 
     # Return success response
     return jsonify({"success": True, "redirect": "/"})
-
-@app.route("/register_check_username", methods=["POST"])
-def register_check_username():
-    """
-    Check if username is available for registration
-    """
-    
-    data = request.get_json()
-    username = data.get("username")
-    
-    # Check if username is provided
-    if not username or username.strip() == "":
-        return jsonify({"success": False, 
-                        "error": "Username is required!"})
-    
-    # Check if username is taken by another user
-    user_exists = db.execute("SELECT 1 FROM users WHERE username = ?", username)
-    if user_exists:
-        return jsonify({"success": False, 
-                        "error": "Username is already taken!"})
-    
-    # Validate username length requirements
-    user_length = len(username)
-    if user_length > 15:
-        return jsonify({"success": False, 
-                        "error": f"Username is {user_length} characters, limit is 15!"})
-    
-    if user_length < 5:
-        return jsonify({"success": False, 
-                        "error": f"Username is {user_length} characters, must be at least 5 characters"})
-
-    return jsonify({"success": True})
-
-
-@app.route("/register_check_password", methods=["POST"])
-def register_check_password():
-    """
-    Check if password is valid for registration
-    """
-    
-    data = request.get_json()
-    password = data.get("password")
-
-    # Check if password is provided
-    if not password:
-        return jsonify({"success": False, 
-                        "error": "Password is required!"})
-    
-    # Validate password length and pattern requirements
-    password_length = len(password)
-    pattern = r"(?=.*\d)(?=.*[a-z])(?=.*[A-Z])\S{8,}"
-
-    if password_length > 20:
-        return jsonify({"success": False, 
-                        "error": f"Password is {password_length} characters, limit is 20!"})
-
-    if password_length < 8:
-        return jsonify({"success": False, 
-                        "error": f"Password is {password_length} characters, must be at least 8 characters"})
-
-    if not re.match(pattern, password):
-        return jsonify({"success": False, 
-                        "error": "Password must contain at least one number, one uppercase letter, and one lowercase letter."})
-
-    return jsonify({"success": True})
 
 @app.route("/account", methods=["GET", "POST"])
 @login_required
@@ -336,78 +271,6 @@ def account():
     flash("Successfully made changes!")
     return jsonify({"success": True, "redirect": True})
 
-
-@app.route("/account_check_username", methods=["POST"])
-def account_check_username():
-    """
-    Check username for account modification
-    """
-
-    data = request.get_json()
-    username = data.get("username")
-
-    # Return success if no username provided as it's optional
-    if not username or username.strip() == "":
-        return jsonify({"success": True})
-    
-    # Get current user's username to keep it
-    current_username = session.get("username")
-    
-    # If it's the same as current username, allow it
-    if username == current_username:
-        return jsonify({"success": True})
-    
-    # Check if username is taken by another user
-    user_exists = db.execute("SELECT 1 FROM users WHERE username = ?", username)
-    if user_exists:
-        return jsonify({"success": False, 
-                        "error": "Username is already taken!"})
-    
-    # Validate username length requirements
-    user_length = len(username)
-    if user_length > 15:
-        return jsonify({"success": False,
-                        "error": f"Username is {user_length} characters, limit is 15!"})
-    
-    if user_length < 5:
-        return jsonify({"success": False,
-                        "error": f"Username is {user_length} characters, must be at least 5 characters"})
-    
-    return jsonify({"success": True})
-
-
-@app.route("/account_check_password", methods=["POST"])
-def account_check_password():
-    """
-    Check password for account modification
-    """
-    
-    data = request.get_json()
-    password = data.get("password")
-
-    # Return success if no password provided as it's optional
-    if not password:
-        return jsonify({"success": True})
-    
-    # Validate password length and pattern requirements
-    password_length = len(password)
-    pattern = r"(?=.*\d)(?=.*[a-z])(?=.*[A-Z])\S{8,}"
-
-    if password_length > 20:
-        return jsonify({"success": False, 
-                        "error": f"Password is {password_length} characters, limit is 20!"})
-
-    if password_length < 8:
-        return jsonify({"success": False, 
-                        "error": f"Password is {password_length} characters, must be at least 8 characters"})
-
-    if not re.match(pattern, password):
-        return jsonify({"success": False, 
-                        "error": "Password must contain at least one number, one uppercase letter, and one lowercase letter."})
-
-    return jsonify({"success": True})
-
-
 @app.route("/logout")
 def logout():
     """
@@ -478,18 +341,18 @@ def explore_teams():
     if request.method == "POST":
         
         # Get team ID and see if its valid
-        team_id = request.form.get("team_id")
-        selected_team = next((team for team in teams if str(team["id"]) == team_id), None)
-        
+        selected_team_id = request.form.get("team_id")
+        selected_team_name = request.form.get("team_name")
+
         # If so, add user to the team
-        if selected_team:
+        if selected_team_id:
             db.execute("""
                 INSERT INTO 
                 team_members (team_id, user_id, privilege) 
                 VALUES (?, ?, 'read')
-                """, team_id, session["user_id"])
-            flash(f"You have successfully joined {selected_team["name"]} ")
-            
+                """, selected_team_id, session["user_id"])
+            flash(f"You have successfully joined {selected_team_name} ")
+
         else:
             flash("Invalid team ID")
         return redirect("/explore")
@@ -553,38 +416,48 @@ def create_team():
 
     # If user reached route via POST, create the team
     else:
-        team_name = request.form.get("team-name")
-        team_code = request.form.get("team-code")
-        team_description = request.form.get("team-description")
-        team_access_type = request.form.get("team-access-type")
+        data = request.get_json()
+        team_name = data.get("team_name")
+        team_code = data.get("team_code")
+        team_description = data.get("team_description")
+        team_access_type = data.get("team_access_type")
 
         # Check if necessary fields are filled
-        for field_name, field_value in [("team name", team_name), ("team status", team_access_type)]:
-            if field_value is None or field_value.strip() == "":
-                return render_template("error.html", error=f"Missing {field_name} for team creation!")
+        if not team_name or team_name.strip() == "":
+            return jsonify({"success": False, "error": "Missing team name for team creation!"})
+        
+        if not team_access_type or team_access_type.strip() == "":
+            return jsonify({"success": False, "error": "Missing team status for team creation!"})
 
         # If the team code is not provided, generate a random one
-        if team_code == "":
+        if not team_code or team_code.strip() == "":
             team_code = ''.join(SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(12))
         
         # Name length requirement filter
         if len(team_name) > 30:
-            return render_template("error.html", error=f"Team name contains {len(team_name)} characters, limit is 30!")
+            return jsonify({"success": False, "error": f"Team name contains {len(team_name)} characters, limit is 30!"})
         
         if len(team_name) < 7:
-            return render_template("error.html", error=f"Team name contains {len(team_name)} characters, must be at least 7 characters long!")
+            return jsonify({"success": False, "error": f"Team name contains {len(team_name)} characters, must be at least 7 characters long!"})
 
         taken = db.execute("SELECT 1 FROM teams WHERE name = ?", team_name)
 
         # If taken, return such
         if taken:
-            return render_template("error.html", error="Desired name is already taken!")
+            return jsonify({"success": False, "error": "Desired name is already taken!"})
         
         if len(team_code) > 12:
-            return render_template("error.html", error=f"Team code contains {len(team_code)} characters, limit is 12!")
+            return jsonify({"success": False, "error": f"Team code contains {len(team_code)} characters, limit is 12!"})
+
+        if team_code and len(team_code) < 6:
+            return jsonify({"success": False, "error": f"Team code contains {len(team_code)} characters, must be at least 6 characters long!"})
 
         if team_access_type not in ("public", "private"):
-            return render_template("error.html", error="Invalid team status")
+            return jsonify({"success": False, "error": "Invalid team status"})
+        
+        # Check description length if provided
+        if team_description and len(team_description) > 500:
+            return jsonify({"success": False, "error": f"Team description contains {len(team_description)} characters, limit is 500!"})
         
         # If all is well create the new team and add the user as admin
         db.execute("INSERT INTO teams (name, code, description, access_type) VALUES (?, ?, ?, ?)", team_name, team_code, team_description, team_access_type)
@@ -593,99 +466,6 @@ def create_team():
         db.execute("INSERT INTO team_members (team_id, user_id, privilege) VALUES (?, ?, ?)", new_team_id, session["user_id"], "admin")
         
         flash(f"Successfully created {team_name}!")
-        return redirect("/teams")
-
-@app.route("/create_check_name", methods=["POST"])
-@login_required
-def create_check_name():
-    """
-    Check if the team name is valid for creation
-    """
-    name = request.get_json()
-    team_name = name.get("name")
-    if not team_name:
-        return jsonify({
-            "success": False,
-            "error": "Team name can't be blank"
-        })
-
-    taken = db.execute("SELECT 1 FROM teams WHERE name = ?", team_name)
-
-    # If taken, return such
-    if taken:
-        return jsonify({
-            "success": False,
-            "error": "Desired name is already taken!"
-        })
-
-    # Check length requirements
-    team_name_length = len(team_name)
-    if team_name_length > 30:
-        return jsonify({
-            "success": False,
-            "error": f"Team name contains {team_name_length} characters, limit is 30!"
-        })
-
-    if team_name_length < 7:
-        return jsonify({
-            "success": False,
-            "error": f"Team name contains {team_name_length} characters, must be at least 7 characters long!"
-        })
-
-    else:
-        return jsonify({"success": True})
-
-@app.route("/create_check_code", methods=["POST"])
-def create_check_code():
-    """
-    Check if the team code is valid for creation
-    """
-    
-    data = request.get_json()
-    team_code = data.get("code")
-
-    team_code_length = len(team_code)
-
-    # Check if team code is provided, return success if its blank as it's optional
-    if not team_code_length:
-        return jsonify({
-            "success": True,
-        })
-
-    # Check length requirements
-    if team_code_length > 12:
-        return jsonify({
-            "success": False,
-            "error": f"Team code contains {team_code_length} characters, limit is 12!"
-        })
-
-    if team_code_length < 6:
-        return jsonify({
-            "success": False,
-            "error": f"Team code contains {team_code_length} characters, must be at least 6 characters long!"
-        })
-
-    else:
-        return jsonify({"success": True})
-    
-@app.route("/create_check_description", methods=["POST"])
-def create_check_description():
-    """
-    Check if the team description is valid for creation
-    """
-    
-    data = request.get_json()
-    team_description = data.get("description")
-
-    # Check if the description length meets requirements
-    team_description_length = len(team_description)
-    if team_description_length > 500:
-        return jsonify({
-            "success": False,
-            "error": f"Team description contains {team_description_length} characters, limit is 500!"
-        })
-        
-    else:
         return jsonify({"success": True})
     
 @app.route("/join_code", methods=["POST"])
@@ -717,71 +497,6 @@ def join_code():
     else:
         return jsonify({"success": False, "error": "Invalid team name or code, please make sure you enter the correct information and try again"})
 
-@app.route("/join_check_name", methods=["POST"])
-@login_required
-def join_check_name():
-    """
-    Check if the team name is valid for joining
-    """
-    
-    name = request.get_json()
-    team_name = name.get("name")
-
-    # Check if team name is provided
-    if not team_name:
-        return jsonify({
-            "success": False,
-            "error": "Team name can't be blank"
-        })
-
-    # Check length requirements
-    team_name_length = len(team_name)
-    if team_name_length > 30:
-        return jsonify({
-            "success": False,
-            "error": f"Team name contains {team_name_length} characters, limit is 30!"
-        })
-
-    if team_name_length < 7:
-        return jsonify({
-            "success": False,
-            "error": f"Team name contains {team_name_length} characters, must be at least 7 characters long!"
-        })
-
-    else:
-        return jsonify({"success": True})
-
-@app.route("/join_check_code", methods=["POST"])
-def join_check_code():
-    """
-    Check if the team code is valid for joining
-    """
-    
-    data = request.get_json()
-    team_code = data.get("code")
-
-    # Check if team code is provided
-    if not team_code:
-        return jsonify({"success": False, 
-                        "error": "Team code can't be blank"})
-
-    # Check length requirements
-    team_code_length = len(team_code)
-    if team_code_length > 12:
-        return jsonify({
-            "success": False,
-            "error": f"Team code contains {team_code_length} characters, limit is 12!"
-        })
-
-    if team_code_length < 6:
-        return jsonify({
-            "success": False,
-            "error": f"Team code contains {team_code_length} characters, must be at least 6 characters long!"
-        })
-
-    else:
-        return jsonify({"success": True})
-
 @app.route("/leave_team", methods=["POST"])
 @login_required
 def leave_team():
@@ -794,14 +509,14 @@ def leave_team():
 
     privilege = db.execute("SELECT privilege FROM team_members WHERE user_id = ? AND team_id = ?", session["user_id"], team_id)[0]["privilege"]
 
+    team_info = db.execute("""SELECT COUNT(team_members.team_id), teams.name FROM team_members 
+                            JOIN teams ON team_members.team_id = teams.id WHERE team_members.team_id = ?""", team_id)[0]
+    
+    member_count = team_info["COUNT(team_members.team_id)"]
+    team_name = team_info["name"]
+
     # If the user is an admin, check if they are able to leave the team
     if privilege == "admin":
-        team_info = db.execute("""SELECT COUNT(team_members.team_id), teams.name FROM team_members 
-                                JOIN teams ON team_members.team_id = teams.id WHERE team_members.team_id = ?""", team_id)[0]
-        
-        member_count = team_info["COUNT(team_members.team_id)"]
-        team_name = team_info["name"]
-        
         if member_count == 1:
             return jsonify({"success": False, "error": "Admins cannot leave the team if they are the last member, please delete the team instead.", "name": team_name})
         
@@ -812,7 +527,7 @@ def leave_team():
     left_team_count = db.execute("DELETE FROM team_members WHERE team_id = ? AND user_id = ?", team_id, session["user_id"])
     if left_team_count == 0:
         return jsonify({"success": False})
-    flash("Successfully left teams")
+    flash(f"Successfully left {team_name}")
     return jsonify({"success": True})
 
 @app.route("/team/<string:team_name>")

@@ -97,6 +97,6 @@ nav .navbar-brand .green
 }
 
 .team-search {
-    border: 2px solid gray;
+    border-width: 2px;
     text-align: center;
 }

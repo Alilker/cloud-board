@@ -30,7 +30,7 @@
     <p class="text-center pb-2">Manage your teams, or view other's teams!</p>
 
     <form>
-        <input type="text" autocomplete="off" class="form-control mb-2 team-search" id="search-input" name="search" placeholder="Search Teams...">
+        <input type="text" autocomplete="off" class="form-control mb-4 team-search" id="search-input" name="search" placeholder="Search Teams...">
     </form>
     <div class="text-center">
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#create-team-modal">
@@ -39,13 +39,6 @@
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#join-code-modal">
             Join A Team With Team Code!
         </button>
-    </div>
-
-    <div class="mt-3">
-        <button type="button" class="btn btn-danger" id="toggle-leave">Select Teams To Leave!</button>
-    </div>
-    <div class="mt-1">
-        <button type="button" class="btn btn-danger leave-button" id="leave-button" data-bs-toggle="modal" data-bs-target="#leave-teams-modal" disabled>Leave!</button>
     </div>
 
     <div id="team-related">
@@ -57,7 +50,10 @@
             <h2 class="mt-5">Your Teams</h2>
             <hr>
             {% for team in your_teams %}
-                <div class="card text-center mb-3">
+                <div class="card text-center mb-3 position-relative">
+                    <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2" data-bs-toggle="modal" data-bs-target="#leave-teams-modal" data-team-id="{{ team.id }}" data-team-name="{{ team.name }}" style="z-index: 10;" title="Leave Team">
+                        <i class="fas fa-times"></i>
+                    </button>
                     <div class="card-body">
                         <h3 class="card-title">{{ team.name }}</h3>
                         {% if team.description %}
@@ -80,7 +76,10 @@
             <h2 class="mt-5">Other Teams</h2>
             <hr>
             {% for team in other_teams %}
-                <div class="card text-center mb-3">
+                <div class="card text-center mb-3 position-relative">
+                    <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2" data-bs-toggle="modal" data-bs-target="#leave-teams-modal" data-team-id="{{ team.id }}" data-team-name="{{ team.name }}" style="z-index: 10;" title="Leave Team">
+                        <i class="fas fa-times"></i>
+                    </button>
                     <div class="card-body">
                         <h3 class="card-title">{{ team.name }}</h3>
                         {% if team.description %}
@@ -115,28 +114,24 @@
                             <div class="mb-3">
                                 <label for="team-name" class="form-label">Team Name<span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="team-name" name="team-name" placeholder="Enter team name" required maxlength="30" minlength="7" autocomplete="off">
-                                <p id="team-name-feedback" class="mt-2 team-feedback"></p>
                             </div>
                             <div class="mb-3">
                                 <label for="team-code" class="form-label">Team Code</label>
                                 <input type="text" class="form-control" id="team-code" name="team-code" placeholder="Enter team code" maxlength="12" minlength="6" autocomplete="off">
-                                <p id="team-code-feedback" class="mt-2 team-feedback"></p>
                             </div>
                             <div class="mb-3">
                                 <label for="team-description" class="form-label">Team Description</label>
                                 <textarea class="form-control" id="team-description" name="team-description" placeholder="Enter description" maxlength="500" autocomplete="off"></textarea>
-                                <p id="team-description-feedback" class="mt-2 team-feedback"></p>
                             </div>
                             <div class="mb-3">
                                 <label for="team-access-type" class="form-label">Status</label>
                                 <select class="form-select" id="team-access-type" name="team-access-type">
                                     <option value="public">Public</option>
                                     <option value="private">Private</option>
-                                </select>
-                                <p id="team-access-type-feedback" class="mt-2 team-feedback"></p>
+                                </select>                            
                             </div>
                             <p><i>(If team code is left blank, a random code will be generated)</i></p>
-                            <button type="submit" class="btn btn-primary" id="submit-create-team" disabled>Create Team</button>
+                            <button type="submit" class="btn btn-primary" id="submit-create-team" data-bs-dismiss="modal" disabled>Create Team</button>
                         </form>
                     </div>
                     <div class="modal-footer"> </div>
@@ -156,12 +151,10 @@
                             <div class="mb-3">
                                 <label for="team-name" class="form-label">Team Name<span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="join-team-name" name="team-name" placeholder="Enter team name" required maxlength="30" minlength="7" autocomplete="off">
-                                <p id="join-team-name-feedback" class="mt-2 join-team-feedback"></p>
                             </div>
                             <div class="mb-3">
                                 <label for="team-code" class="form-label">Team Code<span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="join-team-code" name="team-code" placeholder="Enter team code" maxlength="12" minlength="6" autocomplete="off">
-                                <p id="join-team-code-feedback" class="mt-2 join-code-feedback"></p>
                             </div>
                             <button type="submit" class="btn btn-primary" id="join-code-submit" data-bs-dismiss="modal" disabled>Join Team</button>
                         </form>
@@ -175,34 +168,17 @@
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="leave-teams-modal-label">Leave Teams</h1>
+                        <h1 class="modal-title fs-5" id="leave-teams-modal-label">Leave Team</h1>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <p>Are you sure you want to leave the selected teams?</p>
+                        <p id="leave-confirmation-text">Are you sure you want to leave the selected team?</p>
                     </div>
                     <div class="modal-footer justify-content-center">
-                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal" id="leave-button-confirmation">Leave Teams</button>
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal" id="leave-button-confirmation">Leave Team</button>
                     </div>
                 </div>
             </div>
         </div>
-
-        <div class="modal fade" id="error-modal" tabindex="-1" aria-labelledby="error-modal-label" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h1 class="modal-title fs-5 text-danger" id="leave-teams-modal-label">Error</h1>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p><i class="errors"></i></p>
-                    </div>
-                    <div class="modal-footer justify-content-center">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
 {% endblock %}
