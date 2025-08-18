@@ -1,7 +1,10 @@
 from flask import render_template, request, session, flash
 from functools import wraps
 from cs50 import SQL
+
+
 db = SQL("sqlite:///teampost.db")
+
 
 # Login required decorator that is from CS50's Finance problem set.
 def login_required(f):
