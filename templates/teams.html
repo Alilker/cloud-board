@@ -96,10 +96,11 @@
         </div>
         {% endif %}
 
-        {% if not teams %}
-        <p class="text-center mt-5"><i>Nothing to show here...</i></p>
+        {% if teams | length == 0 %}
+            <p class="text-center mt-5"><i>Nothing to show here...</i></p>
         {% endif %}
     </div>
+
 
     <div id="modal-section">
         <div class="modal fade" id="create-team-modal" tabindex="-1" aria-labelledby="create-team-label" aria-hidden="true">
@@ -180,5 +181,12 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <ul class="pagination justify-content-center" hidden>
+        <li class="page-item"><button class="page-link" id="prev-btn">Previous</button></li>
+        <li class="page-item"><span class="page-link" id="page-info"></span></li>
+        <li class="page-item"><button class="page-link" id="next-btn">Next</button></li>
+    </ul>
 
 {% endblock %}

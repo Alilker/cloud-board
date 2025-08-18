@@ -424,10 +424,12 @@ def create_team():
 
         # Check if necessary fields are filled
         if not team_name or team_name.strip() == "":
-            return jsonify({"success": False, "error": "Missing team name for team creation!"})
+            return jsonify({"success": False, 
+                            "error": "Missing team name for team creation!"})
         
         if not team_access_type or team_access_type.strip() == "":
-            return jsonify({"success": False, "error": "Missing team status for team creation!"})
+            return jsonify({"success": False, 
+                            "error": "Missing team status for team creation!"})
 
         # If the team code is not provided, generate a random one
         if not team_code or team_code.strip() == "":
@@ -435,29 +437,36 @@ def create_team():
         
         # Name length requirement filter
         if len(team_name) > 30:
-            return jsonify({"success": False, "error": f"Team name contains {len(team_name)} characters, limit is 30!"})
+            return jsonify({"success": False, 
+                            "error": f"Team name contains {len(team_name)} characters, limit is 30!"})
         
         if len(team_name) < 7:
-            return jsonify({"success": False, "error": f"Team name contains {len(team_name)} characters, must be at least 7 characters long!"})
+            return jsonify({"success": False, 
+                            "error": f"Team name contains {len(team_name)} characters, must be at least 7 characters long!"})
 
         taken = db.execute("SELECT 1 FROM teams WHERE name = ?", team_name)
 
         # If taken, return such
         if taken:
-            return jsonify({"success": False, "error": "Desired name is already taken!"})
+            return jsonify({"success": False, 
+                            "error": "Desired name is already taken!"})
         
         if len(team_code) > 12:
-            return jsonify({"success": False, "error": f"Team code contains {len(team_code)} characters, limit is 12!"})
+            return jsonify({"success": False, 
+                            "error": f"Team code contains {len(team_code)} characters, limit is 12!"})
 
         if team_code and len(team_code) < 6:
-            return jsonify({"success": False, "error": f"Team code contains {len(team_code)} characters, must be at least 6 characters long!"})
+            return jsonify({"success": False, 
+                            "error": f"Team code contains {len(team_code)} characters, must be at least 6 characters long!"})
 
         if team_access_type not in ("public", "private"):
-            return jsonify({"success": False, "error": "Invalid team status"})
+            return jsonify({"success": False, 
+                            "error": "Invalid team status"})
         
         # Check description length if provided
         if team_description and len(team_description) > 500:
-            return jsonify({"success": False, "error": f"Team description contains {len(team_description)} characters, limit is 500!"})
+            return jsonify({"success": False, 
+                            "error": f"Team description contains {len(team_description)} characters, limit is 500!"})
         
         # If all is well create the new team and add the user as admin
         db.execute("INSERT INTO teams (name, code, description, access_type) VALUES (?, ?, ?, ?)", team_name, team_code, team_description, team_access_type)
@@ -495,7 +504,8 @@ def join_code():
         return jsonify({"success": True})
     
     else:
-        return jsonify({"success": False, "error": "Invalid team name or code, please make sure you enter the correct information and try again"})
+        return jsonify({"success": False, 
+                        "error": "Invalid team name or code, please make sure you enter the correct information and try again"})
 
 @app.route("/leave_team", methods=["POST"])
 @login_required
@@ -518,11 +528,13 @@ def leave_team():
     # If the user is an admin, check if they are able to leave the team
     if privilege == "admin":
         if member_count == 1:
-            return jsonify({"success": False, "error": "Admins cannot leave the team if they are the last member, please delete the team instead.", "name": team_name})
+            return jsonify({"success": False, 
+                            "error": "Admins cannot leave the team if they are the last member, please delete the team instead.", "name": team_name})
         
         admin_count = db.execute("SELECT COUNT(privilege) FROM team_members WHERE team_id = ? AND privilege = 'admin'", team_id)[0]["COUNT(privilege)"]
         if admin_count == 1:
-            return jsonify({"success": False, "error": "Admins cannot leave the team if they are the last admin. Please delete the team, or pass on admin privileges instead.", "name": team_name})
+            return jsonify({"success": False, 
+                            "error": "Admins cannot leave the team if they are the last admin. Please delete the team, or pass on admin privileges instead.", "name": team_name})
 
     left_team_count = db.execute("DELETE FROM team_members WHERE team_id = ? AND user_id = ?", team_id, session["user_id"])
     if left_team_count == 0:
