@@ -11,7 +11,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Function to listen for input changes and validate
     function listenForInputChanges() {
         document.addEventListener('input', function(event) {
-            if (event.target.id === 'create-team-name' || event.target.id === 'create-team-code' || event.target.id === 'create-team-description') {
+            if (event.target.id === 'create-team-name' || event.target.id === 'create-team-code' 
+            || event.target.id === 'create-team-description' || event.target.id === 'create-team-access-type') {
                 const teamName = document.getElementById('create-team-name')?.value.trim() || '';
                 const accessType = document.getElementById('create-team-access-type')?.value.trim() || '';
                 createTeamSubmit.disabled = !(teamName && accessType);
@@ -33,11 +34,6 @@ document.addEventListener('DOMContentLoaded', function() {
         errorModal.show();
     }
 
-    // Function to leave a team
-    function leaveTeam(teamId, currentTeamName) {
-
-    }
-
     // Function to initialize leave team modal
     function initializeLeaveTeamModal() {
         const leaveModal = document.getElementById('leave-teams-modal');
@@ -55,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
 
-        // Confirmation button click handler
+        // On click submit form
         leaveConfirmButton.addEventListener('click', function() {
 
             fetch(`/leave_team_api/${currentTeamName}`, {

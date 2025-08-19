@@ -49,7 +49,7 @@
             Create A Team!
         </button>
 
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#join-code-modal">
+        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#join-code-modal">
             Join A Team With Team Code!
         </button>
     </div>
@@ -60,7 +60,8 @@
 
         {% if your_teams %}
         <div id="your-teams-section">
-            <h2 class="mt-5">Your Teams</h2><hr>
+            <h2 class="mt-5">Your Teams</h2>
+            <hr>
 
             {% for team in your_teams %}
                 <div class="card text-center mb-3">
@@ -78,11 +79,10 @@
                         <p class="card-text">Member count: {{ team.member_count }}</p>
                         <p class="card-text">Status: {{ team.access_type.capitalize() }}</p>
                         <p class="card-text">Team Code: {{ team.code }}</p>
-
                         <a href="/team/{{ team.name }}" class="btn btn-primary mb-2">View team!</a>
                         <a href="/edit_team/{{ team.name }}" class="btn btn-success mb-2">Edit Team!</a>
                         {% if team.privilege == "admin" %}
-                            <a href="/manage_team/{{ team.name }}" class="btn btn-success mb-2">Manage Team!</a>
+                            <a href="/manage_team/{{ team.name }}" class="btn btn-warning mb-2">Manage Team!</a>
                         {% endif %}
                     </div>
                 </div>
@@ -92,7 +92,8 @@
 
         {% if other_teams %}
         <div id="other-teams-section">
-            <h2 class="mt-5">Other Teams</h2><hr>
+            <h2 class="mt-5">Other Teams</h2>
+            <hr>
 
             {% for team in other_teams %}
                 <div class="card text-center mb-3 position-relative">
@@ -112,7 +113,6 @@
                         {% if team.access_type == "public" %}
                             <p class="card-text">Team Code: {{ team.code }}</p>
                         {% endif %}
-
                         <a href="/team/{{ team.name }}" class="btn btn-primary mb-2">View team!</a>
                     </div>
                 </div>
@@ -139,22 +139,26 @@
                         <h1 class="modal-title fs-5" id="create-team-label">Create Team</h1>
                         <button type="button" class="btn-close btn" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
+                    
                     <div class="modal-body">
                         <form id="create-team-form">
                             <div class="mb-3">
                                 <label for="create-team-name" class="form-label">Team Name<span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="create-team-name" name="create-team-name" placeholder="Enter team name" required maxlength="30" minlength="7" autocomplete="off">
                             </div>
+
                             <div class="mb-3">
                                 <label for="create-team-code" class="form-label">Team Code</label>
                                 <input type="text" class="form-control" id="create-team-code" name="create-team-code" placeholder="Enter team code" maxlength="12" minlength="6" autocomplete="off">
                             </div>
+
                             <div class="mb-3">
                                 <label for="create-team-description" class="form-label">Team Description</label>
                                 <textarea class="form-control" id="create-team-description" name="create-team-description" placeholder="Enter description" maxlength="500" autocomplete="off"></textarea>
                             </div>
+
                             <div class="mb-3">
-                                <label for="create-team-access-type" class="form-label">Status</label>
+                                <label for="create-team-access-type" class="form-label">Status<span class="text-danger">*</span></label>
                                 <select class="form-control form-select" id="create-team-access-type" name="create-team-access-type">
                                     <option value="" disabled selected>Select Status!</option>
                                     <option value="public">Public</option>
@@ -163,6 +167,7 @@
                             </div>
                         </form>
                     </div>
+
                     <div class="modal-footer justify-content-center"> 
                         <p><i>(If team code is left blank, a random code will be generated)</i></p>
                         <button type="submit" class="btn btn-primary" id="submit-create-team" data-bs-dismiss="modal" disabled>Create Team</button>
@@ -178,20 +183,23 @@
                         <h1 class="modal-title fs-5" id="join-code-label">Join Team</h1>
                         <button type="button" class="btn-close btn" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
+
                     <div class="modal-body">
                         <form id="join-code-form">
                             <div class="mb-3">
                                 <label for="join-team-name" class="form-label">Team Name<span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="join-team-name" name="join-team-name" placeholder="Enter team name" required maxlength="30" minlength="7" autocomplete="off">
                             </div>
+
                             <div class="mb-3">
                                 <label for="join-team-code" class="form-label">Team Code<span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="join-team-code" name="join-team-code" placeholder="Enter team code" maxlength="12" minlength="6" autocomplete="off">
                             </div>
                         </form>
                     </div>
+
                     <div class="modal-footer justify-content-center">
-                        <button type="submit" class="btn btn-primary" id="join-code-submit" data-bs-dismiss="modal" disabled>Join Team</button>
+                        <button type="submit" class="btn btn-info" id="join-code-submit" data-bs-dismiss="modal" disabled>Join Team</button>
                     </div>
                 </div>
             </div>
@@ -204,9 +212,11 @@
                         <h1 class="modal-title fs-5" id="leave-teams-modal-label">Leave Team</h1>
                         <button type="button" class="btn-close btn" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
+
                     <div class="modal-body">
                         <p id="leave-confirmation-text">Are you sure you want to leave the selected team?</p>
                     </div>
+
                     <div class="modal-footer justify-content-center">
                         <button type="button" class="btn btn-danger" data-bs-dismiss="modal" id="leave-button-confirmation">Leave Team</button>
                     </div>

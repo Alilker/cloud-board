@@ -1,7 +1,7 @@
 from flask import Flask, flash, redirect, render_template, request, session, jsonify
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
-from helpers import *
+from helpers import privilege_required, db
 import re
 import string
 import random
@@ -39,6 +39,14 @@ def handle_error(error):
     error = str(error)
     return render_template("error.html", error=error)
 
+
+@app.route("/", methods=["GET"])
+def index():
+    """
+    Show index page
+    """
+
+    return render_template("index.html", username=session.get("username"))
 
 """ 
 User account logic and route block start for logging in, registering, and changing username or password.
@@ -92,8 +100,8 @@ def login_api():
     session["username"] = rows[0]["username"]
 
     # Return success
+    flash("Successfully logged in!")
     return jsonify({"success": True})
-
 
 
 @app.route("/register", methods=["GET"])
@@ -177,12 +185,15 @@ def register_api():
         session["username"] = username
 
         # Return success response
+        flash("Successfully registered!")
         return jsonify({"success": True})
+
     return jsonify({"success": False, 
                     "error": "An error occurred, please try again!"})
 
+
 @app.route("/account", methods=["GET"])
-@login_required
+@privilege_required("login", "html")
 def account():
     """
     Show the account page
@@ -191,7 +202,7 @@ def account():
     return render_template("account.html")
     
 @app.route("/account_api", methods=["POST"])
-@api_login_required
+@privilege_required("login", "json")
 def account_api():
     """
     Allow user to change account password and username
@@ -281,7 +292,7 @@ def account_api():
 
 
 @app.route("/logout", methods=["GET"])
-@login_required
+@privilege_required("login", "html")
 def logout():
     """
     Log user out
@@ -301,17 +312,17 @@ User account logic and route block end for logging in, registering, and changing
 
 
 """
-Logic and route block start regarding team viewing, team creation, team leaving, and team management.
+Logic and route block start regarding team viewing, team creation, team leaving.
 """
 @app.route("/explore", methods=["GET"])
-@login_required
+@privilege_required("login", "html")
 def explore():
     """
     Allow user to explore public teams and join them
     """
     
     # Check if user has searched a specific name
-    search_query = request.args.get("search", "")
+    search_query = request.args.get("search", "").strip()
 
     if search_query:
         teams = db.execute("""
@@ -339,7 +350,7 @@ def explore():
     return render_template("explore.html", teams=teams)
 
 @app.route("/join_team_api", methods=["POST"])
-@api_login_required
+@privilege_required("login", "json")
 def join_team_api():
     """
     Allow the user to join the team
@@ -353,14 +364,16 @@ def join_team_api():
 
     # If so, add user to the team
     if is_valid_id:
-        
-        is_already_member = db.execute("SELECT 1 FROM team_members WHERE team_id = ? AND user_id = ?", selected_team_id, session["user_id"])
-        if is_already_member:
-            return jsonify({"success": False, "error": "You are already a member of this team!"})
+
+        in_team = db.execute("SELECT 1 FROM team_members WHERE team_id = ? AND user_id = ?", selected_team_id, session["user_id"])
+        if in_team:
+            return jsonify({"success": False, 
+                            "error": "You are already a member of this team!"})
 
         membership_count = db.execute("SELECT COUNT(user_id) FROM team_members WHERE user_id = ?", session["user_id"])[0]["COUNT(user_id)"]
         if membership_count >= 20:
-            return jsonify({"success": False, "error": "To join a team, you must leave another! Team membership is limited to 20 teams!"})
+            return jsonify({"success": False, 
+                            "error": "To join a team, you must leave another! Team membership is limited to 20 teams!"})
 
         db.execute("""
             INSERT INTO 
@@ -379,14 +392,14 @@ def join_team_api():
 
 
 @app.route("/teams", methods=["GET"])
-@login_required
+@privilege_required("login", "html")
 def teams():
     """
     View all teams user is a member of
     """
     
     # Check if user has searched a specific name
-    search_query = request.args.get("search", "")
+    search_query = request.args.get("search", "").strip()
 
     # If they have find teams with that name
     if search_query:
@@ -414,7 +427,7 @@ def teams():
 
 
 @app.route("/create_team", methods=["GET"])
-@login_required
+@privilege_required("login", "html")
 def create_team():
     """
     Show the teams page with the create team form open
@@ -432,7 +445,7 @@ def create_team():
     return render_template("teams.html", teams=teams, method="get_create_team")
 
 @app.route("/create_team_api", methods=["POST"])
-@api_login_required
+@privilege_required("login", "json")
 def create_team_api():
     """
     Create the requested team with user given data
@@ -447,7 +460,8 @@ def create_team_api():
 
     membership_count = db.execute("SELECT COUNT(user_id) FROM team_members WHERE user_id = ?", session["user_id"])[0]["COUNT(user_id)"]
     if membership_count >= 20:
-        return jsonify({"success": False, "error": "To create a team, you must leave another team! Team membership is limited to 20 teams!"})
+        return jsonify({"success": False, 
+                        "error": "To create a team, you must leave another team! Team membership is limited to 20 teams!"})
 
     # Check if necessary fields are filled
     if not team_name or team_name.strip() == "":
@@ -471,10 +485,10 @@ def create_team_api():
         return jsonify({"success": False, 
                         "error": f"Team name contains {len(team_name)} characters, must be at least 7 characters long!"})
 
-    taken = db.execute("SELECT 1 FROM teams WHERE name = ?", team_name)
+    is_taken = db.execute("SELECT 1 FROM teams WHERE name = ?", team_name)
 
     # If taken, return such
-    if taken:
+    if is_taken:
         return jsonify({"success": False, 
                         "error": "Desired name is already taken!"})
     
@@ -509,14 +523,137 @@ def create_team_api():
                     "error": "An error occurred, please try again!"})
 
 
+@app.route("/join_code", methods=["GET"])
+@privilege_required("login", "html")
+def join_code():
+    """
+    Show the teams page with the join code modal already opened
+    """
+
+    teams = db.execute("""
+        SELECT teams.id, teams.name, teams.description, teams.code, teams.access_type, team_members.privilege,
+            (SELECT COUNT(*) FROM team_members WHERE team_members.team_id = teams.id) AS member_count
+        FROM teams
+        JOIN team_members ON teams.id = team_members.team_id
+        WHERE team_members.user_id = ?
+        GROUP BY teams.id
+        ORDER BY team_members.privilege
+    """, session["user_id"])
+    return render_template("teams.html", teams=teams, method="get_join_code")
+
+@app.route("/join_code_api", methods=["POST"])
+@privilege_required("login", "json")
+def join_code_api():
+    """
+    Join a team with the given name and code
+    """
+
+    # Get the data
+    data = request.get_json()
+    team_name = data.get("team_name")
+    team_code = data.get("team_code")
+
+    membership_count = db.execute("SELECT COUNT(user_id) FROM team_members WHERE user_id = ?", session["user_id"])[0]["COUNT(user_id)"]
+    if membership_count >= 20:
+        return jsonify({"success": False, 
+                        "error": "To join a team, you must leave another! Team membership is limited to 20 teams!"})
+
+    # Check if the provided name and code are valid
+    selected_team_result = db.execute("SELECT id FROM teams WHERE name = ? AND code = ?", team_name, team_code)
+    if selected_team_result:
+        selected_team_id = selected_team_result[0]["id"]
+        in_team = db.execute("SELECT 1 FROM team_members WHERE team_id = ? AND user_id = ?", selected_team_id, session["user_id"])
+        
+        if in_team:
+            return jsonify({"success": False, 
+                            "error": "You are already a member of this team!"})
+        
+        # If all is well create the new team and add the user
+        success = db.execute("INSERT INTO team_members (team_id, user_id, privilege) VALUES (?, ?, 'read')", selected_team_id, session["user_id"])
+        if success:
+            flash(f"Successfully joined team {team_name}!")
+            return jsonify({"success": True})
+        return jsonify({"success": False,
+                        "error": "An error occurred, please try again!"})
+
+    return jsonify({"success": False,
+                    "error": "Invalid team name or code, please make sure you enter the correct information and try again"})
+
+
+@app.route("/leave_team_api/<string:team_name>", methods=["POST"])
+@privilege_required("member", "json")
+def leave_team_api(team_name):
+    """
+    Allow users to leave a team
+    """
+    
+    data = request.get_json()
+    team_id = data.get("team_id")
+
+    privilege = db.execute("SELECT privilege FROM team_members WHERE user_id = ? AND team_id = ?", session["user_id"], team_id)[0]["privilege"]
+
+    team_info = db.execute("""SELECT COUNT(team_members.team_id), teams.name FROM team_members 
+                            JOIN teams ON team_members.team_id = teams.id WHERE team_members.team_id = ?""", team_id)[0]
+    
+    member_count = team_info["COUNT(team_members.team_id)"]
+
+    # If the user is an admin, check if they are able to leave the team
+    if privilege == "admin":
+        if member_count == 1:
+            return jsonify({"success": False, 
+                            "error": "Admins cannot leave the team if they are the last member, please delete the team instead!", "name": team_name})
+        
+        admin_count = db.execute("SELECT COUNT(privilege) FROM team_members WHERE team_id = ? AND privilege = 'admin'", team_id)[0]["COUNT(privilege)"]
+        if admin_count == 1:
+            return jsonify({"success": False, 
+                            "error": "Admins cannot leave the team if they are the last admin! Please delete the team, or pass on admin privileges instead!", "name": team_name})
+
+    success = db.execute("DELETE FROM team_members WHERE team_id = ? AND user_id = ?", team_id, session["user_id"])
+    
+    if success:
+        flash(f"Successfully left {team_name}")
+        return jsonify({"success": True})   
+
+    return jsonify({"success": False, 
+                    "error": "An error occurred, please try again!"})
+
+
+@app.route("/team/<string:team_name>", methods=["GET"])
+@privilege_required("member", "html")
+def team_page(team_name):
+    """
+    View a team's page
+    """
+    
+    topics = db.execute("""
+        SELECT topics.id, topics.name, teams.name AS team_name
+        FROM topics 
+        JOIN team_topics ON topics.id = team_topics.topic_id
+        JOIN teams ON team_topics.team_id = teams.id
+        WHERE teams.name = ?
+        ORDER BY topics.name
+    """, team_name)
+
+    return render_template("team_page.html", topics=topics)
+    
+"""
+Logic and route block end regarding team viewing, team creation, team leaving.
+"""
+
+
+
+"""
+Logic and route block start regarding team management.
+"""
+
 @app.route("/manage_team/<string:team_name>", methods=["GET"])
-@admin_required
+@privilege_required("admin", "html")
 def manage_team(team_name):
     """
     Allow user to manage teams that they are an admin in
     """
     
-    search_query = request.args.get("search", "")
+    search_query = request.args.get("search", "").strip()
 
     team = db.execute("SELECT * FROM teams WHERE name = ?", team_name)[0]
     members = db.execute("""SELECT users.username, team_members.user_id, team_members.privilege 
@@ -528,18 +665,18 @@ def manage_team(team_name):
                             """, team["id"], f"%{search_query}%")
 
     if search_query:
-        return render_template("manage_team.html", team=team, current_user=session["user_id"], members=members, method="get_search_member")
+        return render_template("manage_team.html", team=team, current_user=session["user_id"], members=members, method="get_search_members")
     else:
         return render_template("manage_team.html", team=team, current_user=session["user_id"], members=members)
 
 @app.route("/manage_team_api/<string:team_name>", methods=["POST"])
-@api_admin_required
+@privilege_required("admin", "json")
 def manage_team_api(team_name):
     """
     Make requested team changes with user given data
     """
     
-    # Get the requested team data and the current data, use whichever isn't null
+    # Get the requested team data and the current data, use whichever isn't null,
     # however requested team data is of higher priority
     data = request.get_json()
 
@@ -563,8 +700,8 @@ def manage_team_api(team_name):
 
     # Check if name is taken
     if team_name != current_data["name"]:
-        taken = db.execute("SELECT 1 FROM teams WHERE name = ?", team_name)    
-        if taken:
+        is_taken = db.execute("SELECT 1 FROM teams WHERE name = ?", team_name)    
+        if is_taken:
             return jsonify({"success": False, 
                             "error": "Desired name is already taken!"})
     
@@ -592,7 +729,7 @@ def manage_team_api(team_name):
     success = db.execute("UPDATE teams SET name = ?, code = ?, description = ?, access_type = ? WHERE id = ?", team_name, team_code, team_description, team_access_type, team_id)
     
     if success:
-        flash(f"Successfully updated team name to {team_name}!")
+        flash("Successfully updated team!")
         return jsonify({"success": True, 
                         "redirect": f"/manage_team/{team_name}"})
         
@@ -601,21 +738,18 @@ def manage_team_api(team_name):
 
 
 @app.route("/manage_member_api/<string:team_name>", methods=["POST"])
-@api_admin_required
+@privilege_required("admin", "json")
 def manage_member_api(team_name):
     """
     Allow the user to manage the members of a team they are an admin in
     """
     
-    # The reason team_name is an argument is that @api_admin_required requires it, I could make
-    # it work without that, but if it works don't fix it as it's not a big problem
-
     # Get the request data
     data = request.get_json()
     member_id = data.get("member_id")
     new_privilege = data.get("privilege")
     
-    team_id = db.execute("SELECT id FROM teams WHERE name = ?", team_name)
+    team_id = db.execute("SELECT id FROM teams WHERE name = ?", team_name)[0]["id"]
     
     # Check if the privilege was given and is valid
     if not new_privilege:
@@ -630,7 +764,8 @@ def manage_member_api(team_name):
     if not member_id:
         return jsonify({"success": False, 
                         "error": "No member ID provided!"})
-        
+
+    # Check if the member is trying to change their own privilege
     if member_id == str(session["user_id"]):
         return jsonify({"success": False, 
                         "error": "You cannot change your own privilege level!"})
@@ -659,12 +794,11 @@ def manage_member_api(team_name):
     return jsonify({"success": False, 
                     "error": "An error occurred, please try again!"})
 
-
 @app.route("/delete_team_api/<string:team_name>", methods=["POST"])
-@api_admin_required
+@privilege_required("admin", "json")
 def delete_team_api(team_name):
     """
-    Allow the user to delete the teams they are an admin in
+    Delete the specified team
     """
 
     if not team_name:
@@ -687,30 +821,36 @@ def delete_team_api(team_name):
 
 
 @app.route("/edit_team/<string:team_name>", methods=["GET"])
-@edit_required
+@privilege_required("editor", "html")
 def edit_team(team_name):
     """
     Show the edit team page
     """
     
+    search_query = request.args.get("search", "").strip()
     topics = db.execute("""
-        SELECT topics.name, teams.name
-        FROM topics 
+        SELECT topics.id, topics.name FROM topics 
         JOIN team_topics ON topics.id = team_topics.topic_id
         JOIN teams ON team_topics.team_id = teams.id
         WHERE teams.name = ?
+        AND topics.name LIKE ?
         ORDER BY topics.name
-    """, team_name)
-
+        """, team_name, f"%{search_query}%")
+    
     team = db.execute("SELECT * FROM teams WHERE name = ?", team_name)[0]
-
-    return render_template("edit_team.html", topics=topics, team=team)
+    if search_query:
+        return render_template("edit_team.html", topics=topics, team=team, method="get_search_topics")
+    else:
+        return render_template("edit_team.html", topics=topics, team=team)
 
 @app.route("/create_topic_api/<string:team_name>", methods=["POST"])
-@api_edit_required
+@privilege_required("editor", "json")
 def create_topic_api(team_name):
-    # Get the data
+    """
+    Create a new topic for the specified team
+    """
     
+    # Get the data
     data = request.get_json()
     topic_name = data.get("topic_name").strip()
     
@@ -720,6 +860,7 @@ def create_topic_api(team_name):
 
     name_length = len(topic_name)
 
+    # Check if the topic name length is valid
     if name_length > 30:
         return jsonify({"success": False, 
                         "error": f"Topic name is {name_length} characters, limit is 30!"})
@@ -730,6 +871,12 @@ def create_topic_api(team_name):
 
     team_id = db.execute("SELECT id FROM teams WHERE name = ?", team_name)[0]["id"]
 
+    # Check the topic count doesn't exceed limit
+    topic_count = db.execute("SELECT COUNT(team_id) FROM team_topics WHERE team_id = ?", team_id)[0]["COUNT(team_id)"]
+    if topic_count >= 20:
+        return jsonify({"success": False, 
+                        "error": "To create a topic, you must delete another topic! Topic count is limited to 20 topics!"})
+
     # Create the new topic
     topic_id = db.execute("INSERT INTO topics (name) VALUES (?)", topic_name)
     success = db.execute("INSERT INTO team_topics (team_id, topic_id) VALUES (?, ?)", team_id, topic_id)
@@ -739,166 +886,58 @@ def create_topic_api(team_name):
     return jsonify({"success": False, 
                     "error": "An error occurred, please try again!"})
 
-
 @app.route("/edit_topic_api/<string:team_name>/<string:topic_name>", methods=["POST"])
-@api_edit_required
+@privilege_required("editor", "json")
 def edit_topic_api(team_name, topic_name):
-    
+    """
+    Edit an existing topic for the specified team
+    """
+
     data = request.get_json()
     requested_name = data.get("new_name").strip()
-    
+
     if not requested_name:
         return jsonify({"success": False,
                         "error": "Please provide a new name!"})
-        
-    team_id = db.execute("SELECT id FROM teams WHERE name = ?", team_name)
 
-    team_id = team_id[0]["id"]
+    team_id = db.execute("SELECT id FROM teams WHERE name = ?", team_name)[0]["id"]
+    topic_id = db.execute("SELECT id FROM topics WHERE name = ?", topic_name)[0]["id"]
 
     # Check if the topic exists
-    topic_id = db.execute("SELECT id FROM topics WHERE name = ? AND team_id = ?", topic_name, team_id)[0]["id"]
-    if not topic_id:
+    exists = db.execute("SELECT 1 FROM team_topics WHERE topic_id = ? AND team_id = ?", topic_id, team_id)
+    if not exists:
         return jsonify({"success": False, 
-                        "error": "Topic does not exist!!"})
-        
-    name_length = len(requested_name)
-    
-    if name_length > 30:
+                        "error": "Topic does not exist!"})
+
+    # Check if deletion was requested
+    if requested_name == "D":
+        success = db.execute("DELETE FROM topics WHERE id = ?", topic_id)
+        if success:
+            flash(f"Successfully deleted {topic_name}!")
+            return jsonify({"success": True})
         return jsonify({"success": False,
-                        "error": f"Team name contains {name_length} characters, limit is 30!"})
+                        "error": "An error occurred, please try again!"})
+
+    # Check if the length is valid
+    name_length = len(requested_name)
+    if name_length > 40:
+        return jsonify({"success": False,
+                        "error": f"Team name contains {name_length} characters, limit is 40!"})
     if name_length < 7:
         return jsonify({"success": False,
                         "error": f"Team name contains {name_length} characters, must be at least 7 characters!"})
 
     # Update the topic name
     success = db.execute("UPDATE topics SET name = ? WHERE id = ?", requested_name, topic_id)
+    print(success, requested_name, topic_id)
     if success:
-        flash(f"Successfully updated topic to {requested_name}!")
+        flash(f"Successfully updated topic's name to {requested_name}!")
         return jsonify({"success": True})
     return jsonify({"success": False,
                     "error": "An error occurred, please try again!"})
 
-
-@app.route("/join_code", methods=["GET"])
-@login_required
-def join_code():
-    """
-    Show the teams page with the join code modal already opened
-    """
-
-    teams = db.execute("""
-        SELECT teams.id, teams.name, teams.description, teams.code, teams.access_type, team_members.privilege,
-            (SELECT COUNT(*) FROM team_members WHERE team_members.team_id = teams.id) AS member_count
-        FROM teams
-        JOIN team_members ON teams.id = team_members.team_id
-        WHERE team_members.user_id = ?
-        GROUP BY teams.id
-        ORDER BY team_members.privilege
-    """, session["user_id"])
-    return render_template("teams.html", teams=teams, method="get_join_code")
-
-@app.route("/join_code_api", methods=["POST"])
-@api_login_required
-def join_code_api():
-    """
-    Join a team with the given name and code
-    """
-
-    # Get the data
-    data = request.get_json()
-    team_name = data.get("team_name")
-    team_code = data.get("team_code")
-
-    membership_count = db.execute("SELECT COUNT(user_id) FROM team_members WHERE user_id = ?", session["user_id"])[0]["COUNT(user_id)"]
-    if membership_count >= 20:
-        return jsonify({"success": False, "error": "To join a team, you must leave another! Team membership is limited to 20 teams!"})
-
-    # Check if the provided name and code are valid
-    selected_team_result = db.execute("SELECT id FROM teams WHERE name = ? AND code = ?", team_name, team_code)
-    if selected_team_result:
-        selected_team_id = selected_team_result[0]["id"]
-        already_in_team = db.execute("SELECT 1 FROM team_members WHERE team_id = ? AND user_id = ?", selected_team_id, session["user_id"])
-        
-        if already_in_team:
-            return jsonify({"success": False, 
-                            "error": "You are already a member of this team!"})
-        
-        # If all is well create the new team and add the user
-        success = db.execute("INSERT INTO team_members (team_id, user_id, privilege) VALUES (?, ?, 'read')", selected_team_id, session["user_id"])
-        if success:
-            flash(f"Successfully joined team {team_name}!")
-            return jsonify({"success": True})
-        return jsonify({"success": False,
-                        "error": "An error occurred, please try again!"})
-
-    return jsonify({"success": False,
-                    "error": "Invalid team name or code, please make sure you enter the correct information and try again"})
-
-
-@app.route("/leave_team_api/<string:team_name>", methods=["POST"])
-@api_login_required
-def leave_team_api(team_name):
-    """
-    Allow users to leave a team
-    """
-    
-    data = request.get_json()
-    team_id = data.get("team_id")
-
-    privilege = db.execute("SELECT privilege FROM team_members WHERE user_id = ? AND team_id = ?", session["user_id"], team_id)[0]["privilege"]
-
-    team_info = db.execute("""SELECT COUNT(team_members.team_id), teams.name FROM team_members 
-                            JOIN teams ON team_members.team_id = teams.id WHERE team_members.team_id = ?""", team_id)[0]
-    
-    member_count = team_info["COUNT(team_members.team_id)"]
-
-    # If the user is an admin, check if they are able to leave the team
-    if privilege == "admin":
-        if member_count == 1:
-            return jsonify({"success": False, 
-                            "error": "Admins cannot leave the team if they are the last member, please delete the team instead!", "name": team_name})
-        
-        admin_count = db.execute("SELECT COUNT(privilege) FROM team_members WHERE team_id = ? AND privilege = 'admin'", team_id)[0]["COUNT(privilege)"]
-        if admin_count == 1:
-            return jsonify({"success": False, 
-                            "error": "Admins cannot leave the team if they are the last admin! Please delete the team, or pass on admin privileges instead!", "name": team_name})
-
-    is_member = db.execute("SELECT FROM team_members WHERE team_id = ? AND user_id = ?", team_id, session["user_id"])
-    
-    if is_member:
-        success = db.execute("DELETE FROM team_members WHERE team_id = ? AND user_id = ?", team_id, session["user_id"])
-        
-        if success:
-            flash(f"Successfully left {team_name}")
-            return jsonify({"success": True})   
-
-        return jsonify({"success": False, 
-                        "error": "An error occurred, please try again!"})
-
-    return jsonify({"success": False,
-                    "error": "You are not a member of this team!"})
-
-
-@app.route("/team/<string:team_name>", methods=["GET"])
-@membership_required
-def team_page(team_name):
-    """
-    View a team's page
-    """
-    
-    topics = db.execute("""
-        SELECT topics.id, topics.name, teams.name AS team_name
-        FROM topics 
-        JOIN team_topics ON topics.id = team_topics.topic_id
-        JOIN teams ON team_topics.team_id = teams.id
-        WHERE teams.name = ?
-        ORDER BY topics.name
-    """, team_name)
-
-    return render_template("team_page.html", topics=topics)
-    
 """
-Logic and route block end regarding team viewing, team creation, team leaving, and team management.
+Logic and route block end for team management
 """
 
 
@@ -907,7 +946,7 @@ Logic and route block end regarding team viewing, team creation, team leaving, a
 Logic and route block end regarding board viewing and management.
 """
 @app.route("/team/<string:team_name>/topic/<string:topic_name>")
-@membership_required
+@privilege_required("member", "html")
 def board(team_name, topic_name):
     statuses = [
         {"id": "announcement", "name": "Announcements"},
@@ -939,7 +978,7 @@ def board(team_name, topic_name):
 
 
 @app.route("/move_note", methods=["POST"])
-@membership_required
+@privilege_required("member", "json")
 def move_note():
     data = request.get_json()
     note_id = data["note_id"]

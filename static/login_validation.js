@@ -31,18 +31,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value.trim();
 
-
-            // Pack the form data
-            const data = {
-                username: username,
-                password: password,
-            };
-
             // Submit form data
             fetch('/login_api', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
+                body: JSON.stringify({
+                    'username': username,
+                    'password': password
+                })
             })
             .then(res => res.json())
             .then(data => {

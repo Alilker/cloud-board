@@ -22,6 +22,20 @@ nav .navbar-brand .green
     color: #2e944b;
 }
 
+.logged-out-index-card {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.logged-in-index-card {
+    flex: 1;
+}
+
+.logged-in-index-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
 .card, .btn, .form-control {
     transition: opacity 0.2s, transform 0.2s;
 }
@@ -43,9 +57,14 @@ nav .navbar-brand .green
 }
 
 .team-search {
-    width: clamp(400px, 50vw, 1000px);
+    width: clamp(50px, 50vw, 1000px);
+}
+
+.management-search {
+    width: clamp(50px, 50vw, 400px);
 }
 
 .leave-button {
     z-index: 10;
 }
+

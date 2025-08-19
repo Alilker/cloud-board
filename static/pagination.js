@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-    // Show page function
+    // Function for showing the page'th page
     function showPage(page) {
         const start = (page - 1) * itemsPerPage;
         const end = start + itemsPerPage;
@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     }
 
-    // Function for initializing pagination by adding event listeners to the page buttons
+    // Function for initializing pagination
     function updatePagination() {
 
         // Add the button event listeners
@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     };
     
-    // Initialize functionality based on execution order
+    // Initialize functionality
     showPage(1);
     updatePagination();
 });

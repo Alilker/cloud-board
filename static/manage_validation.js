@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const manageTeamSubmit = document.querySelector('#submit-manage-team');
     const manageMembersSubmit = document.querySelector('#submit-member-changes');
     
-    // Get team ID and current team name from hidden inputs
+    // Get current team name from hidden input
     const currentTeamName = document.getElementById('current-team-name')?.value.trim();
 
     // Function for displaying errors
@@ -17,6 +17,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to manage member privileges
     function initializeManageTeamMember() {
+
+        // Enable the submit button when there is only one checkbox checked
+        document.addEventListener('change', function() {
+            const checkedCount = document.querySelectorAll('input[type="checkbox"][name="member-checkbox"]:checked').length;
+            manageMembersSubmit.disabled = (checkedCount !== 1);
+        });
+
         manageMembersSubmit.addEventListener('click', function(event) {
             event.preventDefault();
 
@@ -92,12 +99,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function for create team form submission initialization
     function initializeManageTeam() {
+        let teamName, teamCode, teamDescription, teamAccessType;
 
+        // Enable the submit button when there is any input
         document.addEventListener('input', function() {
-            let teamName = document.getElementById('manage-team-name')?.value.trim();
-            let teamCode = document.getElementById('manage-team-code')?.value.trim();
-            let teamDescription = document.getElementById('manage-team-description')?.value.trim();
-            let teamAccessType = document.getElementById('manage-team-access-type')?.value.trim();
+            teamName = document.getElementById('manage-team-name')?.value.trim();
+            teamCode = document.getElementById('manage-team-code')?.value.trim();
+            teamDescription = document.getElementById('manage-team-description')?.value.trim();
+            teamAccessType = document.getElementById('manage-team-access-type')?.value.trim();
             manageTeamSubmit.disabled = (teamName === '' && teamCode === '' && teamDescription === '' && teamAccessType === '');
         });
 
@@ -135,20 +144,5 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeManageTeamMember();
     initializeManageTeam();
     initializeDeleteTeam();
-
 });
-
-// I couldn't get this to work inside of the other DOM content loader, but since it's
-// not a big deal I just left it like this
-let manageMembersCheck;
-document.addEventListener('DOMContentLoaded', function() {
-    manageMembersCheck = document.getElementById('submit-member-changes');
-    manageMembersCheck.disabled = true;
-});
-
-// Function to check if only one checkbox is checked
-function checkboxCountChecker() {
-    const checkedCount = document.querySelectorAll('input[type="checkbox"][name="member-checkbox"]:checked').length;
-    manageMembersCheck.disabled = (checkedCount !== 1);
-}
 

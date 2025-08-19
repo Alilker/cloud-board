@@ -7,22 +7,31 @@
 
 {% endblock %}
 
+{% block scripts %}
+
+    <script src="/static/pagination.js"></script>
+
+{% endblock %}
+
 {% block main %}
 
     {% if topics %}
         {% for topic in topics %}
             <div class="card text-center mb-3">
                 <div class="card-body">
-                    <h2 class="card-title">{{ topic.name }}</h2>
-
-                    <form id="view-topic-form" action="/team/{{ topic.team_name }}/topic/{{ topic.name }}" method="get">
-                        <button type="submit" class="btn btn-primary">View Topic</button>
-                    </form>
+                    <h2 class="card-title mb-3">{{ topic.name }}</h2>
+                    <a href="/team/{{ topic.team_name }}/topic/{{ topic.name }}" class="btn btn-primary">View Topic!</a>
                 </div>
             </div>
         {% endfor %}
     {% else %}
         <p class="text-center mt-5"><i>Nothing to show here...</i></p>
     {% endif %}
+
+    <ul class="pagination justify-content-center" hidden>
+        <li class="page-item"><button class="page-link btn btn-secondary me-1" id="prev-btn">Previous</button></li>
+        <li class="page-item"><span class="page-link" id="page-info"></span></li>
+        <li class="page-item"><button class="page-link btn btn-secondary ms-1" id="next-btn">Next</button></li>
+    </ul>
 
 {% endblock %}

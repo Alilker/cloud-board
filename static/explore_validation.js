@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function showError(message) {
         const errorModal = new bootstrap.Modal(document.querySelector('#error-modal'));
         const errorMessage = document.querySelector('#error-modal .errors');
+        
         errorMessage.innerHTML = message;
         errorModal.show();
     }

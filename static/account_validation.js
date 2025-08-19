@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // If password is entered, confirmation must be provided and match
             confirmationValid = confirmation && document.getElementById('confirmation-feedback').innerHTML.includes('Passwords match!');
         }
-         else if (confirmation) {
+        else if (confirmation) {
 
             // If confirmation is entered but no password, it's invalid
             confirmationValid = false;
@@ -194,14 +194,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .catch(error => {
-                console
+                console.error(error)
                 showError('A network error occurred, please try again!');
             });
         });
     };
 
-    // Initialize functionality based on execution order
+    // Initialize functionality
     listenForInputChanges();
-    updateAccountSubmit();
     initializeAccountForm();
 });

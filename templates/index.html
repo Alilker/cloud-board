@@ -1,0 +1,90 @@
+{% extends "layout.html" %}
+
+
+{% block title %}
+
+    Home
+
+{% endblock %}
+
+{% block main %}
+
+    {% if username %}
+        <h1 class="mb-4">Welcome back, {{ username }}!</h1>
+
+        <div class="logged-in-index-container">
+            <div class="d-flex justify-content-center gap-4 mb-4">
+
+                <div class="first-row card text-center logged-in-index-card">
+                    <div class="card-body">
+                        <h5 class="card-title">My Teams</h5>
+                        <p class="card-text">View and manage your teams, create topics, and collaborate with your team members!</p>
+                        <a href="/teams" class="btn btn-primary">Go To My Teams</a>
+                    </div>
+                </div>
+                
+                <div class="card text-center logged-in-index-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Explore Teams</h5>
+                        <p class="card-text">Discover and join public teams to collaborate on exciting open-source projects!</p>
+                        <a href="/explore" class="btn btn-success">Explore Teams</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="second-row d-flex justify-content-center gap-4">
+                <div class="card text-center logged-in-index-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Create Team</h5>
+                        <p class="card-text">Start a new team and invite others to collaborate on your projects!</p>
+                        <a href="/create_team" class="btn btn-warning">Create New Team</a>
+                    </div>
+                </div>
+                
+                <div class="card text-center logged-in-index-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Join With Code</h5>
+                        <p class="card-text">Have a team code? Join a private team using an invitation code!</p>
+                        <a href="/join_code" class="btn btn-info">Join With Code</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    {% else %}
+        <h1 class="mb-4">Welcome to Cloud-Board!</h1>
+        <p class="lead mb-4">Effortlessly collaborate, organize, and manage projects.</p>
+        
+        <div class="card logged-out-index-card">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Get Started Today!</h5>
+                <p class="card-text">Join teams, create kanban boards, and stay organized with your colleagues.</p>
+                
+                <div class="mb-3">
+                    <a href="/register" class="btn btn-primary btn-lg me-2">Register!</a>
+                    <a href="/login" class="btn btn-secondary btn-lg">Log In!</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="logged-out-index-card mt-4">
+            <div class="d-flex justify-content-around">
+                <div class="text-center">
+                    <h6>Create Teams</h6>
+                    <p class="small text-muted">Organize your projects with custom teams!</p>
+                </div>
+
+                <div class="text-center">
+                    <h6>Kanban Boards</h6>
+                    <p class="small text-muted">Stay organized with kanban boards!</p>
+                </div>
+
+                <div class="text-center">
+                    <h6>Collaborate</h6>
+                    <p class="small text-muted">Work together on projects with ease!</p>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+{% endblock %}

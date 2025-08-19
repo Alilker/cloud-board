@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', function() {
         errorModal.show();
     }
 
-    // Initialize register form submission
+    // Function for initializing register form submission
     function initializeRegisterForm() {
         registerSubmit.addEventListener('click', function(event) {
             event.preventDefault();
@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Initialize functionality based on execution order
+    // Initialize functionality
     listenForInputChanges();
     updateRegisterSubmit();
     initializeRegisterForm();

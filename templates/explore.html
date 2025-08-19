@@ -17,7 +17,7 @@
 {% block main %}
 
     <h1 class="text-center">Explore Teams</h1>
-    <p class="text-center pb-5">Join a team to start collaborating!</p>
+    <p class="text-center pb-5">Join teams to start collaborating!</p>
     
     <div class="search-control d-flex justify-content-center mb-4">
         <form class="d-flex align-items-center" id="team-search-form">
@@ -30,6 +30,7 @@
         {% for team in teams %}
         <div class="card text-center mb-3">
             <div class="card-body">
+                
                 <h2 class="card-title">{{ team.name }}</h2>
                 {% if team.description %}
                     <p class="card-text"><i>{{ team.description }}</i></p>

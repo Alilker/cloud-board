@@ -9,9 +9,7 @@
 
 {% block scripts %}
 
-    <script src="/static/manage_validation.js"></script>
-
-    {% if method == "get_search_member" %}
+    {% if method == "get_search_members" %}
     <script>
         addEventListener('DOMContentLoaded', function() {
             const manageMembersModal = new bootstrap.Modal(document.getElementById('manage-members-modal'));
@@ -20,12 +18,15 @@
     </script>
     {% endif %}
 
+    <script src="/static/manage_validation.js"></script>
+
 {% endblock %}
 
 {% block main %}
 
-    <h1 class="text-center mb-4">Manage Team: {{ team.name }}</h1>
+    <input type="hidden" name="current-team-name" id="current-team-name" value="{{ team.name }}">
 
+    <h1 class="text-center mb-4">Manage Team: {{ team.name }}</h1>
     {% if team.description %}
         <p class="card-text"><i>{{ team.description }}</i></p>
     {% else %}
@@ -35,14 +36,12 @@
     <p class="card-text">Status: {{ team.access_type.capitalize() }}</p>
     <p class="card-text">Team Code: {{ team.code }}</p>
 
-    <input type="hidden" name="current-team-name" id="current-team-name" value="{{ team.name }}">
-
     <div class="text-center mb-4">
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#manage-team-modal">
+        <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#manage-team-modal">
             Manage Team!
         </button>
 
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#manage-members-modal">
+        <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#manage-members-modal">
             Manage Members!
         </button>
 
@@ -59,9 +58,11 @@
                         <h1 class="modal-title fs-5" id="delete-teams-modal-label">DELETE Team!</h1>
                         <button type="button" class="btn-close btn" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
+
                     <div class="modal-body">
                         <p id="delete-confirmation-text"></p>
                     </div>
+                    
                     <input type="text" class="form-control text-center mb-4" id="delete-confirmation-input" name="delete-confirmation-input" placeholder="Enter 'DELETE' to confirm deletion" autocomplete="off">
                     <div class="modal-footer justify-content-center">
                         <button type="button" class="btn btn-danger" data-bs-dismiss="modal" id="delete-button-confirmation" disabled>DELETE Team!</button>
@@ -77,20 +78,24 @@
                         <h1 class="modal-title fs-5" id="manage-team-label">Manage Team</h1>
                         <button type="button" class="btn-close btn" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
+
                     <div class="modal-body">
                         <form id="manage-team-form">
                             <div class="mb-3">
-                                <label for="manage-team-name" class="form-label">Team Name<span class="text-danger">*</span></label>
+                                <label for="manage-team-name" class="form-label">Team Name</label>
                                 <input type="text" class="form-control" id="manage-team-name" name="manage-team-name" placeholder="Enter team name" required maxlength="30" minlength="7" autocomplete="off">
                             </div>
+
                             <div class="mb-3">
                                 <label for="manage-team-code" class="form-label">Team Code</label>
                                 <input type="text" class="form-control" id="manage-team-code" name="manage-team-code" placeholder="Enter team code" maxlength="12" minlength="6" autocomplete="off">
                             </div>
+
                             <div class="mb-3">
                                 <label for="manage-team-description" class="form-label">Team Description</label>
                                 <textarea class="form-control" id="manage-team-description" name="manage-team-description" placeholder="Enter description" maxlength="500" autocomplete="off"></textarea>
                             </div>
+
                             <div class="mb-3">
                                 <label for="manage-team-access-type" class="form-label">Status</label>
                                 <select class="form-select form-control" id="manage-team-access-type" name="manage-team-access-type">
@@ -101,9 +106,11 @@
                             </div>
                         </form>
                     </div>
-                    <div class="modal-footer justify-content-center">
+
+                    <div class="modal-footer d-flex flex-column justify-content-center">
                         <p><i>(If team code is left blank, a random code will be generated)</i></p>
-                        <button type="submit" class="btn btn-primary" id="submit-manage-team" data-bs-dismiss="modal" disabled>Save Changes</button>
+                        <p><i>(Every default field will revert to the original value)</i></p>
+                        <button type="submit" class="btn btn-warning" id="submit-manage-team" data-bs-dismiss="modal" disabled>Save Changes</button>
                     </div>
                 </div>
             </div>
@@ -116,20 +123,25 @@
                         <h1 class="modal-title fs-5" id="manage-members-label">Manage Team Members</h1>
                         <button type="button" class="btn-close btn" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
+                    
                     <div class="modal-body">
-
-                        <form class="mb-4" id="user-search-form">
-                            <input type="text" autocomplete="off" class="form-control user-search" id="search-input" name="search" placeholder="Search Teams...">
-                        </form>
+                        <div class="search-control d-flex justify-content-center mb-4">
+                            <form class="d-flex align-items-center" id="team-search-form">
+                                <input type="text" autocomplete="off" class="form-control management-search" id="search-input" name="search" placeholder="Search Teams...">
+                                <a href="/manage_team/{{ team.name }}" class="btn btn-secondary ms-2" id="clear-search" >&times;</a>
+                            </form>
+                        </div>
 
                         {% if (members | length) > 1 %}
                             {% for member in members %}
                                 {% if member.user_id != current_user %}
+                                <hr>
                                 <div class="member-item text-center">
-                                    <div class="username-and-checkbox d-flex justify-content-center align-items-center gap-2">
-                                        <input class="form-check-input form-control " type="checkbox" name="member-checkbox" value="{{ member.user_id }}" onclick="checkboxCountChecker()">
+                                    <div class="username-and-checkbox d-flex justify-content-center align-items-center gap-2 mb-2">
+                                        <input class="form-check-input form-control " type="checkbox" name="member-checkbox" value="{{ member.user_id }}">
                                         <p class="mb-0">{{ member.username }}</p>
                                     </div>
+
                                     <select class="form-control text-center mb-3">
                                         {% for privilege, privilege_name in [('admin', 'Admin'), ('edit', 'Editor'), ('read', 'Board-Editor'), ('kick', 'Kick')] %}
                                             {% if privilege == member.privilege %}
@@ -140,6 +152,7 @@
                                         {% endfor %}
                                     </select>
                                 </div>
+                                <hr>
                                 {% endif %}
                             {% endfor %}
                         {% else %}
@@ -147,7 +160,7 @@
                         {% endif %}
 
                     <div class="modal-footer justify-content-center">
-                        <button type="button" class="btn btn-primary" id="submit-member-changes" data-bs-dismiss="modal">Save Changes</button>
+                        <button type="button" class="btn btn-warning" id="submit-member-changes" data-bs-dismiss="modal" disabled>Save Changes</button>
                     </div>
                 </div>
             </div>
