@@ -2,9 +2,9 @@ from flask import Flask, flash, redirect, render_template, request, session, jso
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 from helpers import login_required, membership_required, admin_required, db
-from random import random
-from re import match
+import re
 import string
+import random
 
 # Configure application
 app = Flask(__name__)
@@ -147,7 +147,7 @@ def register():
     if password_length < 8:
         return jsonify({"success": False, 
                         "error": f"Password is {password_length} characters, must be at least 8 characters!"})
-    if not match(pattern, password):
+    if not re.match(pattern, password):
         return jsonify({"success": False, 
                         "error": "Password must contain at least one number, one uppercase letter, and one lowercase letter!"})
         
@@ -236,7 +236,7 @@ def account():
             if password_length < 8:
                 return jsonify({"success": False, 
                                 "error": f"Password is {password_length} characters, must be at least 8 characters!"})
-            if not match(pattern, new_password):
+            if not re.match(pattern, new_password):
                 return jsonify({"success": False, 
                                 "error": "Password must contain at least one number, one uppercase letter, and one lowercase letter!"})
 
@@ -303,7 +303,7 @@ def explore_teams():
     if request.method == "GET":
         if search_query:
            teams = db.execute("""
-                SELECT teams.id, teams.name, teams.description, teams.code, teams.access_type,
+                SELECT id, name, description, access_type, code,
                 (SELECT COUNT(*) FROM team_members WHERE team_members.team_id = teams.id) AS member_count
                 FROM teams
                 WHERE teams.id NOT IN 
@@ -313,7 +313,7 @@ def explore_teams():
 
         else:
             teams = db.execute("""
-                SELECT teams.id, teams.name, teams.description, teams.code, teams.access_type,
+                SELECT id, name, description, access_type, code,
                 (SELECT COUNT(*) FROM team_members WHERE team_members.team_id = teams.id) AS member_count
                 FROM teams
                 WHERE teams.id NOT IN 
@@ -391,7 +391,6 @@ def view_teams():
 
 
 @app.route("/create_team", methods=["GET", "POST"])
-@login_required
 def create_team():
     """
     Allow users to create new teams
