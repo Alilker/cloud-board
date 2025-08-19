@@ -675,7 +675,7 @@ def join_code():
             
             # If all is well create the new team and add the user
             db.execute("INSERT INTO team_members (team_id, user_id, privilege) VALUES (?, ?, 'read')", selected_team_id, session["user_id"])
-            flash("Successfully joined team!")
+            flash(f"Successfully joined team {team_name}!")
             return jsonify({"success": True})
         
         return jsonify({"success": False, 
