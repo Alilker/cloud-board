@@ -19,9 +19,12 @@
     <h1 class="text-center">Explore Teams</h1>
     <p class="text-center pb-5">Join a team to start collaborating!</p>
     
-    <form>
-        <input type="text" autocomplete="off" class="form-control mb-4 team-search" id="search-input" name="search" placeholder="Search Teams...">
-    </form>
+    <div class="search-control d-flex justify-content-center mb-4">
+        <form class="d-flex align-items-center">
+            <input type="text" autocomplete="off" class="form-control team-search" id="search-input" name="search" placeholder="Search Teams...">
+            <a href="/explore" class="btn btn-secondary ms-2" id="clear-search" >&times;</a>
+        </form>
+    </div>
 
     {% if teams %}
         {% for team in teams %}

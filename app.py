@@ -302,29 +302,23 @@ def explore_teams():
     # User reached route via GET
     if request.method == "GET":
         if search_query:
-            teams = db.execute("""
-                SELECT teams.id, teams.name, teams.description, teams.code, teams.access_type, team_members.privilege,
-                    (SELECT COUNT(*) FROM team_members WHERE team_members.team_id = teams.id) AS member_count
+           teams = db.execute("""
+                SELECT teams.id, teams.name, teams.description, teams.code, teams.access_type,
+                (SELECT COUNT(*) FROM team_members WHERE team_members.team_id = teams.id) AS member_count
                 FROM teams
-                JOIN team_members ON teams.id = team_members.team_id
-                AND teams.id NOT IN (
-                SELECT team_id
-                FROM team_members
-                WHERE user_id = ?)
+                WHERE teams.id NOT IN 
+                (SELECT team_id FROM team_members WHERE user_id = ?)
                 AND teams.name LIKE ?
-            """, session["user_id"], f"%{search_query}%")
-        
+                """, session["user_id"], f"%{search_query}%")
+
         else:
             teams = db.execute("""
-                SELECT teams.id, teams.name, teams.description, teams.code, teams.access_type, team_members.privilege,
-                    (SELECT COUNT(*) FROM team_members WHERE team_members.team_id = teams.id) AS member_count
+                SELECT teams.id, teams.name, teams.description, teams.code, teams.access_type,
+                (SELECT COUNT(*) FROM team_members WHERE team_members.team_id = teams.id) AS member_count
                 FROM teams
-                JOIN team_members ON teams.id = team_members.team_id
-                AND teams.id NOT IN (
-                SELECT team_id
-                FROM team_members
-                WHERE user_id = ?)
-            """, session["user_id"])
+                WHERE teams.id NOT IN 
+                (SELECT team_id FROM team_members WHERE user_id = ?)
+                """, session["user_id"])
             
         return render_template("explore.html", teams=teams)
 

@@ -102,7 +102,7 @@
                     </div>
                     <div class="modal-footer justify-content-center">
                         <p><i>(If team code is left blank, a random code will be generated)</i></p>
-                        <button type="submit" class="btn btn-primary" id="submit-edit-team" data-bs-dismiss="modal" disabled>Edit Team</button>
+                        <button type="submit" class="btn btn-primary" id="submit-edit-team" data-bs-dismiss="modal" disabled>Save Changes</button>
                     </div>
                 </div>
             </div>
@@ -116,16 +116,18 @@
                         <button type="button" class="btn-close btn" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <form>
-                            <input type="text" autocomplete="off" class="form-control mb-4 team-search" id="search-input" name="search" placeholder="Search Members...">
+
+                        <form class="mb-4">
+                            <input type="text" autocomplete="off" class="form-control user-search" id="search-input" name="search" placeholder="Search Teams...">
                         </form>
+
                         {% if (members | length) > 1 %}
                             {% for member in members %}
                                 {% if member.user_id != current_user %}
                                 <div class="member-item text-center">
                                     <input type="checkbox" name="member-checkbox" value="{{ member.user_id }}" onclick="checkboxCountChecker(event)">
                                     <p class="d-inline">{{ member.username }}</p>
-                                    <select class="form-control text-center mb-4">
+                                    <select class="form-control text-center mb-3">
                                         {% for privilege, privilege_name in [('admin', 'Admin'), ('edit', 'Editor'), ('read', 'Board-Editor'), ('kick', 'Kick')] %}
                                             {% if privilege == member.privilege %}
                                                 <option value="{{ privilege }}" selected="selected">{{ privilege_name }}</option>
@@ -142,7 +144,7 @@
                         {% endif %}
 
                     <div class="modal-footer justify-content-center">
-                        <button type="button" class="btn btn-primary" id="submit-member-changes" data-bs-dismiss="modal">Save changes</button>
+                        <button type="button" class="btn btn-primary" id="submit-member-changes" data-bs-dismiss="modal">Save Changes</button>
                     </div>
                 </div>
             </div>

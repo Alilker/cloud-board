@@ -37,9 +37,13 @@ nav .navbar-brand .green
     animation-duration: 0.3s;
 }
 
-.team-search {
+#search-input{
     border-width: 2px;
     text-align: center;
+}
+
+.team-search {
+    width: clamp(400px, 50vw, 1000px);
 }
 
 .leave-button {
