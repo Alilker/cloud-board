@@ -136,7 +136,6 @@ def register():
         return jsonify({"success": False, 
                         "error": "Missing password!"})
         
-
     # Validate password length and pattern requirements
     password_length = len(password)
     pattern = r"(?=.*\d)(?=.*[a-z])(?=.*[A-Z])\S{8,}"
@@ -308,6 +307,7 @@ def explore_teams():
                 FROM teams
                 WHERE teams.id NOT IN 
                 (SELECT team_id FROM team_members WHERE user_id = ?)
+                AND access_type != 'private'
                 AND teams.name LIKE ?
                 """, session["user_id"], f"%{search_query}%")
 
@@ -318,6 +318,7 @@ def explore_teams():
                 FROM teams
                 WHERE teams.id NOT IN 
                 (SELECT team_id FROM team_members WHERE user_id = ?)
+                AND access_type != 'private'
                 """, session["user_id"])
             
         return render_template("explore.html", teams=teams)
