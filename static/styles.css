@@ -26,7 +26,7 @@ nav .navbar-brand .green
     transition: opacity 0.2s, transform 0.2s;
 }
 
-.card:hover, .btn:hover, .form-control:hover {
+.card:hover, .btn:hover, .form-control:hover, .card:focus, .btn:focus, .form-control:focus {
     transform: translateY(-1px);
     box-shadow: 0 1px 1px black;
 }

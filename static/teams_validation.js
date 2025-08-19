@@ -11,26 +11,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Function to listen for input changes and validate
     function listenForInputChanges() {
         document.addEventListener('input', function(event) {
-            if (event.target.id === 'team-name' || event.target.id === 'team-code' || event.target.id === 'team-description') {
-                updateCreateSubmit();
+            if (event.target.id === 'create-team-name' || event.target.id === 'create-team-code' || event.target.id === 'create-team-description') {
+                const teamName = document.getElementById('create-team-name')?.value.trim() || '';
+                const accessType = document.getElementById('create-team-access-type')?.value.trim() || '';
+                createTeamSubmit.disabled = !(teamName && accessType);
             } 
             else if (event.target.id === 'join-team-name' || event.target.id === 'join-team-code') {
-                updateJoinSubmit();
+                const teamName = document.getElementById('join-team-name')?.value.trim() || '';
+                const teamCode = document.getElementById('join-team-code')?.value.trim() || '';
+                joinCodeSubmit.disabled = !(teamName && teamCode);
             }
         });
-    }
-
-    // Function for create team button state management
-    function updateCreateSubmit() {
-        const teamName = document.getElementById('team-name')?.value.trim() || '';
-        createTeamSubmit.disabled = !teamName;
-    }
-
-    // Function for join code button state management
-    function updateJoinSubmit() {
-        const teamName = document.getElementById('join-team-name')?.value.trim() || '';
-        const teamCode = document.getElementById('join-team-code')?.value.trim() || '';
-        joinCodeSubmit.disabled = !(teamName && teamCode);
     }
 
     // Function for displaying errors
@@ -43,25 +34,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Function to leave a team
-    function leaveTeam(teamId) {
-        fetch('/leave_team', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 'team_id': teamId })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                window.location.reload();
-            } 
-            else {
-                showError(data.error || 'An error occured, please try again');
-            }
-        })
-        .catch(error => {
-            console.error(error);
-            showError('A network error occurred, please try again!');
-        });
+    function leaveTeam(teamId, currentTeamName) {
+
     }
 
     // Function to initialize leave team modal
@@ -83,7 +57,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Confirmation button click handler
         leaveConfirmButton.addEventListener('click', function() {
-            leaveTeam(teamId);
+
+            fetch(`/leave_team_api/${currentTeamName}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 'team_id': teamId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } 
+                else {
+                    showError(data.error || 'An error occured, please try again');
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                showError('A network error occurred, please try again!');
+            });
         });
     }
 
@@ -95,7 +87,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const teamName = document.querySelector('#join-team-name').value.trim();
             const teamCode = document.querySelector('#join-team-code').value.trim();
 
-            fetch('/join_code', {
+            fetch('/join_code_api', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
@@ -106,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    window.location.href = '/teams';
+                    window.location.reload();
                 } 
                 else {
                     showError(data.error || 'An error occurred, please try again');
@@ -124,12 +116,12 @@ document.addEventListener('DOMContentLoaded', function() {
         createTeamSubmit.addEventListener('click', function(event) {
             event.preventDefault();
             
-            const teamName = document.getElementById('team-name')?.value.trim();
-            const teamCode = document.getElementById('team-code')?.value.trim();
-            const teamDescription = document.getElementById('team-description')?.value.trim();
-            const teamAccessType = document.getElementById('team-access-type')?.value;
+            const teamName = document.getElementById('create-team-name')?.value.trim();
+            const teamCode = document.getElementById('create-team-code')?.value.trim();
+            const teamDescription = document.getElementById('create-team-description')?.value.trim();
+            const teamAccessType = document.getElementById('create-team-access-type')?.value.trim();
 
-            fetch('/create_team', {
+            fetch('/create_team_api', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
@@ -160,6 +152,4 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeJoinTeam();
     initializeCreateTeam();
     initializeLeaveTeamModal();
-    updateJoinSubmit();
-    updateCreateSubmit();
 });

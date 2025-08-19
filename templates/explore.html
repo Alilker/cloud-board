@@ -20,7 +20,7 @@
     <p class="text-center pb-5">Join a team to start collaborating!</p>
     
     <div class="search-control d-flex justify-content-center mb-4">
-        <form class="d-flex align-items-center">
+        <form class="d-flex align-items-center" id="team-search-form">
             <input type="text" autocomplete="off" class="form-control team-search" id="search-input" name="search" placeholder="Search Teams...">
             <a href="/explore" class="btn btn-secondary ms-2" id="clear-search" >&times;</a>
         </form>
@@ -41,7 +41,7 @@
                 <p class="card-text">Team Code: {{ team.code }}</p>
 
                 <div class="container">
-                    <form>
+                    <form id="join-team-form">
                         <button type="submit" class="btn btn-primary join-button" data-team-id="{{ team.id }}">Join team!</button>
                     </form>
                 </div>

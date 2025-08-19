@@ -38,7 +38,7 @@
     <p class="text-center pb-2">Manage your teams, or view other's teams!</p>
 
     <div class="search-control d-flex justify-content-center mb-4">
-        <form class="d-flex align-items-center">
+        <form id="team-search-form" class="d-flex align-items-center">
             <input type="text" autocomplete="off" class="form-control team-search" id="search-input" name="search" placeholder="Search Teams...">
             <a href="/teams" class="btn btn-secondary ms-2" id="clear-search" >&times;</a>
         </form>
@@ -80,7 +80,7 @@
                         <p class="card-text">Team Code: {{ team.code }}</p>
 
                         <a href="/team/{{ team.name }}" class="btn btn-primary mb-2">View team!</a>
-                        <button class="btn btn-success mb-2">Edit Team!</button>
+                        <a href="/edit_team/{{ team.name }}" class="btn btn-success mb-2">Edit Team!</a>
                         {% if team.privilege == "admin" %}
                             <a href="/manage_team/{{ team.name }}" class="btn btn-success mb-2">Manage Team!</a>
                         {% endif %}
@@ -140,22 +140,23 @@
                         <button type="button" class="btn-close btn" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <form>
+                        <form id="create-team-form">
                             <div class="mb-3">
-                                <label for="team-name" class="form-label">Team Name<span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="team-name" name="team-name" placeholder="Enter team name" required maxlength="30" minlength="7" autocomplete="off">
+                                <label for="create-team-name" class="form-label">Team Name<span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="create-team-name" name="create-team-name" placeholder="Enter team name" required maxlength="30" minlength="7" autocomplete="off">
                             </div>
                             <div class="mb-3">
-                                <label for="team-code" class="form-label">Team Code</label>
-                                <input type="text" class="form-control" id="team-code" name="team-code" placeholder="Enter team code" maxlength="12" minlength="6" autocomplete="off">
+                                <label for="create-team-code" class="form-label">Team Code</label>
+                                <input type="text" class="form-control" id="create-team-code" name="create-team-code" placeholder="Enter team code" maxlength="12" minlength="6" autocomplete="off">
                             </div>
                             <div class="mb-3">
-                                <label for="team-description" class="form-label">Team Description</label>
-                                <textarea class="form-control" id="team-description" name="team-description" placeholder="Enter description" maxlength="500" autocomplete="off"></textarea>
+                                <label for="create-team-description" class="form-label">Team Description</label>
+                                <textarea class="form-control" id="create-team-description" name="create-team-description" placeholder="Enter description" maxlength="500" autocomplete="off"></textarea>
                             </div>
                             <div class="mb-3">
-                                <label for="team-access-type" class="form-label">Status</label>
-                                <select class="form-select" id="team-access-type" name="team-access-type">
+                                <label for="create-team-access-type" class="form-label">Status</label>
+                                <select class="form-control form-select" id="create-team-access-type" name="create-team-access-type">
+                                    <option value="" disabled selected>Select Status!</option>
                                     <option value="public">Public</option>
                                     <option value="private">Private</option>
                                 </select>                            
@@ -178,14 +179,14 @@
                         <button type="button" class="btn-close btn" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <form>
+                        <form id="join-code-form">
                             <div class="mb-3">
-                                <label for="team-name" class="form-label">Team Name<span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="join-team-name" name="team-name" placeholder="Enter team name" required maxlength="30" minlength="7" autocomplete="off">
+                                <label for="join-team-name" class="form-label">Team Name<span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="join-team-name" name="join-team-name" placeholder="Enter team name" required maxlength="30" minlength="7" autocomplete="off">
                             </div>
                             <div class="mb-3">
-                                <label for="team-code" class="form-label">Team Code<span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="join-team-code" name="team-code" placeholder="Enter team code" maxlength="12" minlength="6" autocomplete="off">
+                                <label for="join-team-code" class="form-label">Team Code<span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="join-team-code" name="join-team-code" placeholder="Enter team code" maxlength="12" minlength="6" autocomplete="off">
                             </div>
                         </form>
                     </div>

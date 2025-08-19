@@ -1,20 +1,11 @@
 document.addEventListener('DOMContentLoaded', function() {
 
     // Button declarations
-    const editTeamSubmit = document.querySelector('#submit-edit-team');
-    const editMembersSubmit = document.querySelector('#submit-member-changes');
+    const manageTeamSubmit = document.querySelector('#submit-manage-team');
+    const manageMembersSubmit = document.querySelector('#submit-member-changes');
     
     // Get team ID and current team name from hidden inputs
-    const teamId = document.getElementById('team-id')?.value;
-    const currentTeamName = document.getElementById('current-team-name')?.value;
-
-
-    // Function to listen for input changes and validate
-    function listenForInputChanges() {
-        document.addEventListener('input', function() {
-            editTeamSubmit.disabled = false;
-        });
-    }
+    const currentTeamName = document.getElementById('current-team-name')?.value.trim();
 
     // Function for displaying errors
     function showError(message) {
@@ -24,45 +15,20 @@ document.addEventListener('DOMContentLoaded', function() {
         errorModal.show();
     }
 
-    // Function to delete a team
-    function deleteTeam(teamId, teamName) {
-
-        // Submit delete team form
-        fetch(`/delete_team/${teamName}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 'team_id': teamId })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                window.location.href = '/teams';
-            } 
-            else {
-                showError(data.error || 'Error deleting team, please try again!');
-            }
-        })
-        .catch(error => {
-            console.error(error);
-            showError('Network error occurred, please try again!');
-        });
-    }
-
-    // Function to edit member privileges
-    function initializeEditTeamMember() {
-        editMembersSubmit.addEventListener('click', function(event) {
+    // Function to manage member privileges
+    function initializeManageTeamMember() {
+        manageMembersSubmit.addEventListener('click', function(event) {
             event.preventDefault();
 
             const checkedBox = document.querySelector('input[name="member-checkbox"]:checked');
-            const memberId = checkedBox.value;
-            const newPrivilege = checkedBox.parentElement.querySelector('select').value;
+            const memberId = checkedBox.value.trim();
+            const newPrivilege = checkedBox.parentElement.parentElement.querySelector('select').value.trim();
 
             // Submit manage member form
-            fetch(`/manage_member/${currentTeamName}`, {
+            fetch(`/manage_member_api/${currentTeamName}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
-                    'team_id': teamId,
                     'member_id': memberId,
                     'privilege': newPrivilege
                 })
@@ -84,40 +50,65 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // Function to initialize delete team modal
-    function initializeDeleteTeamModal() {
+    function initializeDeleteTeam() {
         const deleteModal = document.getElementById('delete-teams-modal');
         const confirmationText = document.getElementById('delete-confirmation-text');
         const deleteConfirmButton = document.getElementById('delete-button-confirmation');
+        const deleteConfirmInput = document.getElementById('delete-confirmation-input');
 
-        deleteModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            if (confirmationText && currentTeamName) {
-                confirmationText.textContent = `Are you sure you want to delete ${currentTeamName}?`;
-            }
+        deleteModal.addEventListener('show.bs.modal', function () {
+            confirmationText.innerHTML = `Are you sure you want to delete ${currentTeamName}?
+            <br><i class="text-danger mt-4">This action cannot be undone!</i>`;
+        });
+
+        // Confirmation input checker
+        deleteConfirmInput.addEventListener('input', function() {
+            deleteConfirmInput.value.trim() === 'DELETE' ? deleteConfirmButton.disabled = false : deleteConfirmButton.disabled = true;
         });
 
         // Confirmation button click handler
         deleteConfirmButton.addEventListener('click', function() {
-            deleteTeam(teamId, currentTeamName);
+
+            // Submit delete team form
+            fetch(`/delete_team_api/${currentTeamName}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '/teams';
+                } 
+                else {
+                    showError(data.error || 'Error deleting team, please try again!');
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                showError('Network error occurred, please try again!');
+            });
         });
     }
 
     // Function for create team form submission initialization
-    function initializeEditTeam(teamId) {
-        editTeamSubmit.addEventListener('click', function(event) {
+    function initializeManageTeam() {
+
+        document.addEventListener('input', function() {
+            let teamName = document.getElementById('manage-team-name')?.value.trim();
+            let teamCode = document.getElementById('manage-team-code')?.value.trim();
+            let teamDescription = document.getElementById('manage-team-description')?.value.trim();
+            let teamAccessType = document.getElementById('manage-team-access-type')?.value.trim();
+            manageTeamSubmit.disabled = (teamName === '' && teamCode === '' && teamDescription === '' && teamAccessType === '');
+        });
+
+        manageTeamSubmit.addEventListener('click', function(event) {
             event.preventDefault();
-            
-            const teamName = document.getElementById('team-name')?.value.trim();
-            const teamCode = document.getElementById('team-code')?.value.trim();
-            const teamDescription = document.getElementById('team-description')?.value.trim();
-            const teamAccessType = document.getElementById('team-access-type')?.value;
 
             // Submit manage team form
-            fetch(`/manage_team/${document.getElementById('current-team-name').value}`, {
+            fetch(`/manage_team_api/${currentTeamName}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
-                    "team_id": teamId,
                     "team_name": teamName, 
                     "team_code": teamCode,
                     "team_description": teamDescription,
@@ -141,24 +132,23 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Initialize functionality
-    listenForInputChanges();
-    initializeEditTeamMember();
-    initializeEditTeam(teamId);
-    initializeDeleteTeamModal();
+    initializeManageTeamMember();
+    initializeManageTeam();
+    initializeDeleteTeam();
 
 });
 
 // I couldn't get this to work inside of the other DOM content loader, but since it's
 // not a big deal I just left it like this
-let submitMemberChanges;
+let manageMembersCheck;
 document.addEventListener('DOMContentLoaded', function() {
-    submitMemberChanges = document.getElementById('submit-member-changes');
-    submitMemberChanges.disabled = true;
+    manageMembersCheck = document.getElementById('submit-member-changes');
+    manageMembersCheck.disabled = true;
 });
 
 // Function to check if only one checkbox is checked
-function checkboxCountChecker(event) {
+function checkboxCountChecker() {
     const checkedCount = document.querySelectorAll('input[type="checkbox"][name="member-checkbox"]:checked').length;
-    submitMemberChanges.disabled = (checkedCount !== 1);
+    manageMembersCheck.disabled = (checkedCount !== 1);
 }
 

@@ -1,0 +1,107 @@
+{% extends "layout.html" %}
+
+
+{% block title %}
+
+    Manage Team
+
+{% endblock %}
+
+{% block scripts %}
+
+    {% if method == "get_search_topic" %}
+    <script>
+        addEventListener('DOMContentLoaded', function() {
+            const edit_members_modal = new bootstrap.Modal(document.getElementById('edit-members-modal'));
+            edit_members_modal.show();
+        });
+    </script>
+    {% endif %}
+
+    <script src="/static/edit_team.js"></script>
+
+{% endblock %}
+
+{% block main %}
+
+    <h1 class="text-center mb-4">Edit Team: {{ team.name }}</h1>
+
+    {% if team.description %}
+        <p class="card-text"><i>{{ team.description }}</i></p>
+    {% else %}
+        <p class="card-text"><i>No description provided.</i></p>
+    {% endif %}
+    <p class="card-text">Member count: {{ team.member_count }}</p>
+    <p class="card-text">Status: {{ team.access_type.capitalize() }}</p>
+    {% if team.access_type == "public" %}
+        <p class="card-text">Team Code: {{ team.code }}</p>
+    {% endif %}
+
+    <input type="hidden" name="team-id" id="team-id" value="{{ team.id }}">
+    <input type="hidden" name="team-name" id="team-name" value="{{ team.name }}">
+
+    <div class="text-center mb-4">
+        <button type="button" class="btn btn-primary" id="cancel-member-changes" data-bs-toggle="modal" data-bs-target="#create-topics-modal">
+            Create New Topic!
+        </button>
+
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#edit-topics-modal">
+            Edit Topics!
+        </button>
+    </div>
+
+    <div class="modal fade" id="edit-topics-modal" tabindex="-1" aria-labelledby="edit-topics-label" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="edit-topics-label">Edit Team Topics!</h1>
+                    <button type="button" class="btn-close btn" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+                    <form class="mb-4">
+                        <input type="text" autocomplete="off" class="form-control topic-search" id="search-input" name="search" placeholder="Search Topics...">
+                    </form>
+
+                    {% if (topics | length) > 0 %}
+                        {% for topic in topics %}
+                            <div class="topic-item text-center">
+                                <div class="topic-name-and-checkbox d-flex justify-content-center align-items-center gap-2">
+                                    <input class="form-check-input form-control " type="checkbox" name="topic-checkbox" value="{{ topic.name }}" onclick="checkboxCountChecker()">
+                                    <p class="mb-0">{{ topic.name }}</p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-center"><i>Nothing to see here...</i></p>
+                    {% endif %}
+                </div>
+
+                <div class="modal-footer justify-content-center">
+                    <input class="form-control text-center" placeholder="Enter new topic name or enter 'DELETE' to remove topic'" autocomplete="off" id="edit-topic-name" name="edit-topic-name">
+                    <button type="button" class="btn btn-primary" id="topic-changes-submit" data-bs-dismiss="modal">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="create-topics-modal" tabindex="-1" aria-labelledby="create-topics-modal-label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="create-topics-modal-label">Create Topic</h1>
+                    <button type="button" class="btn-close btn" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="create-topic-form">
+                        <input type="text" class="form-control text-center" id="new-topic-name" name="new-topic-name" placeholder="Enter new topic name" required>
+                    </form>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="create-topic-submit" disabled>Create Topic</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

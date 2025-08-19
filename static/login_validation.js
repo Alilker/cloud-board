@@ -3,24 +3,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Button declarations
     const loginSubmit = document.querySelector('#login-submit');
 
-    // Function to listen for input changes and validate
-    function listenForInputChanges() {
-        document.addEventListener('input', function(event) {
-            if (event.target.id === 'username' || event.target.id === 'password') {
-                updateLoginSubmit();
-            }
-        });
-    }
-
-    // Function for login button state management
-    function updateLoginSubmit() {
-        const username = document.getElementById('username').value.trim();
-        const password = document.getElementById('password').value.trim();
-        
-        loginSubmit.disabled = !(username && password);
-    }
-
-
     // Function for displaying errors
     function showError(message) {
         const errorModal = new bootstrap.Modal(document.querySelector('#error-modal'));
@@ -32,12 +14,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function for login form submission initialization
     function initializeLoginForm() {
+
+        document.addEventListener('input', function(event) {
+            if (event.target.id === 'username' || event.target.id === 'password') {
+                const username = document.getElementById('username').value.trim();
+                const password = document.getElementById('password').value.trim();
+                
+                loginSubmit.disabled = !(username && password);
+            }
+        });
+
         loginSubmit.addEventListener('click', function(event) {
             event.preventDefault();
 
             // Get the form values
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
 
 
             // Pack the form data
@@ -47,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
             };
 
             // Submit form data
-            fetch('/login', {
+            fetch('/login_api', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
@@ -69,7 +61,5 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // Initialize functionality based on execution order
-    listenForInputChanges();
-    updateLoginSubmit();
     initializeLoginForm();
 });

@@ -15,7 +15,7 @@
                 <div class="card-body">
                     <h2 class="card-title">{{ topic.name }}</h2>
 
-                    <form action="/team/{{ topic.team_name }}/topic/{{ topic.name }}" method="get">
+                    <form id="view-topic-form" action="/team/{{ topic.team_name }}/topic/{{ topic.name }}" method="get">
                         <button type="submit" class="btn btn-primary">View Topic</button>
                     </form>
                 </div>

@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function for validating inputted password in real time
     function validatePassword() {
-        const password = document.getElementById('password').value;
+        const password = document.getElementById('password').value.trim();
         const element = document.getElementById('password-feedback');
         
         if (!password) {
@@ -100,8 +100,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function for password confirmation validation in real time
     function validatePasswordConfirmation() {
-        const password = document.getElementById('password').value;
-        const confirmation = document.getElementById('confirmation').value;
+        const password = document.getElementById('password').value.trim();
+        const confirmation = document.getElementById('confirmation').value.trim();
         const element = document.getElementById('confirmation-feedback');
         
         if (!confirmation) {
@@ -135,12 +135,12 @@ document.addEventListener('DOMContentLoaded', function() {
             event.preventDefault();
 
             // Get the form values
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const confirmation = document.getElementById('confirmation').value;
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const confirmation = document.getElementById('confirmation').value.trim();
 
             // Submit form data
-            fetch('/register', {
+            fetch('/register_api', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

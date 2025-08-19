@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const teamId = button.getAttribute('data-team-id');
 
                 // Send request to join team
-                fetch('/explore', {
+                fetch('/join_team_api', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function for validating password in real time (optional field for account changes)
     function validatePassword() {
-        const password = document.getElementById('password').value;
+        const password = document.getElementById('password').value.trim();
         const element = document.getElementById('password-feedback');
         
         if (!password) {
@@ -119,8 +119,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function for validating password confirmation in real time
     function validatePasswordConfirmation() {
-        const password = document.getElementById('password').value;
-        const confirmation = document.getElementById('confirmation').value;
+        const password = document.getElementById('password').value.trim();
+        const confirmation = document.getElementById('confirmation').value.trim();
         const element = document.getElementById('confirmation-feedback');
         
         // If no password is being changed, confirmation is not needed
@@ -167,13 +167,13 @@ document.addEventListener('DOMContentLoaded', function() {
             event.preventDefault();
 
             // Get the form values
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const confirmation = document.getElementById('confirmation').value;
-            const currentPassword = document.querySelector('input[name="current_password"]').value;
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const confirmation = document.getElementById('confirmation').value.trim();
+            const currentPassword = document.querySelector('input[name="current_password"]').value.trim();
 
             // Submit form data
-            fetch('/account', {
+            fetch('/account_api', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
