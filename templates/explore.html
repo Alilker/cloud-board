@@ -38,13 +38,9 @@
                     <p class="card-text"><i>No description provided.</i></p>
                 {% endif %}
                 <p class="card-text">Member count: {{ team.member_count }}</p>
-                <p class="card-text">Status: {{ team.access_type.capitalize() }}</p>
-                <p class="card-text">Team Code: {{ team.code }}</p>
 
                 <div class="container">
-                    <form id="join-team-form">
-                        <button type="submit" class="btn btn-primary join-button" data-team-id="{{ team.id }}">Join team!</button>
-                    </form>
+                    <button class="btn btn-primary join-button" data-team-id="{{ team.id }}">Join team!</button>
                 </div>
             </div>
         </div>

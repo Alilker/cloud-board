@@ -59,9 +59,7 @@
                     </div>
 
                     <div class="modal-body">
-                        <form id="create-topic-form">
-                            <input type="text" class="form-control text-center" id="new-topic-name" name="new-topic-name" autocomplete="off" placeholder="Enter new topic name!" required>
-                        </form>
+                        <input type="text" class="form-control text-center" id="new-topic-name" name="new-topic-name" autocomplete="off" placeholder="Enter new topic name!" required>
                     </div>
 
                     <div class="modal-footer justify-content-center">
@@ -83,7 +81,7 @@
                         <div class="search-control d-flex justify-content-center mb-4">
                             <form class="d-flex align-items-center" id="team-search-form">
                                 <input type="text" autocomplete="off" class="form-control management-search" id="search-input" name="search" placeholder="Search Teams...">
-                                <a href="/edit_team/{{ team.name }}" class="btn btn-secondary ms-2" id="clear-search" >&times;</a>
+                                <a href="/edit_team/{{ team.name }}?search=" class="btn btn-secondary ms-2" id="clear-search" >&times;</a>
                             </form>
                         </div>
 

@@ -22,7 +22,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Enable the submit button when there is input
         let topicName;
-        document.addEventListener('input', function() {
+        document.addEventListener('input', function(event) {
+            event.preventDefault();
             topicName = document.getElementById('new-topic-name')?.value.trim();
             createTopicSubmit.disabled = (topicName === '');
         });

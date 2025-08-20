@@ -2,18 +2,20 @@ from flask import Flask, flash, redirect, render_template, request, session, jso
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 from helpers import privilege_required, db
+from dotenv import load_dotenv
+from os import getenv
 import re
 import string
 import random
 
 # Configure application
 app = Flask(__name__)
-
+load_dotenv()
 
 # Configure session to use filesystem (instead of signed cookies)
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
-app.secret_key = "Supersduperecretkeythatnoonewillguess"
+app.secret_key = getenv("SECRET_KEY")
 Session(app)
 
 
@@ -27,10 +29,6 @@ def after_request(response):
     response.headers["Pragma"] = "no-cache"
     return response
 
-# Temporary endpoint for database retrieval from Render
-@app.route(f"/download-db/{app.secret_key}", methods=["GET"])
-def download_db():
-    return send_file("cloudboard.db", as_attachment=True)
 
 # Pretty much copy pasted from 
 # https://stackoverflow.com/questions/29332056/global-error-handler-for-any-exception
@@ -330,26 +328,26 @@ def explore():
 
     if search_query:
         teams = db.execute("""
-            SELECT id, name, description, access_type, code,
-            (SELECT COUNT(*) FROM team_members WHERE team_members.team_id = teams.id) AS member_count
-            FROM teams
-            WHERE teams.id NOT IN 
-            (SELECT team_id FROM team_members WHERE user_id = ?)
-            AND access_type != 'private'
-            AND teams.name LIKE ?
-            ORDER BY teams.name ASC
-            """, session["user_id"], f"%{search_query}%")
+                            SELECT id, name, description, access_type, code,
+                            (SELECT COUNT(*) FROM team_members WHERE team_members.team_id = teams.id) AS member_count
+                            FROM teams
+                            WHERE teams.id NOT IN 
+                            (SELECT team_id FROM team_members WHERE user_id = ?)
+                            AND access_type != 'private'
+                            AND teams.name LIKE ?
+                            ORDER BY teams.name ASC
+                            """, session["user_id"], f"%{search_query}%")
 
     else:
         teams = db.execute("""
-            SELECT id, name, description, access_type, code,
-            (SELECT COUNT(*) FROM team_members WHERE team_members.team_id = teams.id) AS member_count
-            FROM teams
-            WHERE teams.id NOT IN 
-            (SELECT team_id FROM team_members WHERE user_id = ?)
-            AND access_type != 'private'
-            ORDER BY teams.name ASC
-            """, session["user_id"])
+                            SELECT id, name, description, access_type, code,
+                            (SELECT COUNT(*) FROM team_members WHERE team_members.team_id = teams.id) AS member_count
+                            FROM teams
+                            WHERE teams.id NOT IN 
+                            (SELECT team_id FROM team_members WHERE user_id = ?)
+                            AND access_type != 'private'
+                            ORDER BY teams.name ASC
+                            """, session["user_id"])
         
     return render_template("explore.html", teams=teams)
 
@@ -380,10 +378,10 @@ def join_team_api():
                             "error": "To join a team, you must leave another! Team membership is limited to 20 teams!"})
 
         db.execute("""
-            INSERT INTO 
-            team_members (team_id, user_id, privilege) 
-            VALUES (?, ?, 'read')
-            """, selected_team_id, session["user_id"])
+                    INSERT INTO 
+                    team_members (team_id, user_id, privilege) 
+                    VALUES (?, ?, 'read')
+                    """, selected_team_id, session["user_id"])
 
         team_name = db.execute("SELECT name FROM teams WHERE id = ?", selected_team_id)[0]["name"]
         if team_name:
@@ -408,24 +406,24 @@ def teams():
     # If they have find teams with that name
     if search_query:
         teams = db.execute("""
-            SELECT teams.id, teams.name, teams.description, teams.code, teams.access_type, team_members.privilege,
-                (SELECT COUNT(*) FROM team_members WHERE team_members.team_id = teams.id) AS member_count
-            FROM teams
-            JOIN team_members ON teams.id = team_members.team_id
-            WHERE team_members.user_id = ?
-            AND teams.name LIKE ?
-            ORDER BY team_members.privilege, teams.name ASC
-            """, session["user_id"], f"%{search_query}%")
+                            SELECT teams.id, teams.name, teams.description, teams.code, teams.access_type, team_members.privilege,
+                                (SELECT COUNT(*) FROM team_members WHERE team_members.team_id = teams.id) AS member_count
+                            FROM teams
+                            JOIN team_members ON teams.id = team_members.team_id
+                            WHERE team_members.user_id = ?
+                            AND teams.name LIKE ?
+                            ORDER BY team_members.privilege, teams.name ASC
+                            """, session["user_id"], f"%{search_query}%")
         
     else:
         teams = db.execute("""
-            SELECT teams.id, teams.name, teams.description, teams.code, teams.access_type, team_members.privilege,
-                (SELECT COUNT(*) FROM team_members WHERE team_members.team_id = teams.id) AS member_count
-            FROM teams
-            JOIN team_members ON teams.id = team_members.team_id
-            WHERE team_members.user_id = ?
-            ORDER BY team_members.privilege, teams.name ASC
-            """, session["user_id"])
+                            SELECT teams.id, teams.name, teams.description, teams.code, teams.access_type, team_members.privilege,
+                                (SELECT COUNT(*) FROM team_members WHERE team_members.team_id = teams.id) AS member_count
+                            FROM teams
+                            JOIN team_members ON teams.id = team_members.team_id
+                            WHERE team_members.user_id = ?
+                            ORDER BY team_members.privilege, teams.name ASC
+                            """, session["user_id"])
 
     return render_template("teams.html", teams=teams)
 
@@ -438,13 +436,13 @@ def create_team():
     """
     
     teams = db.execute("""
-        SELECT teams.id, teams.name, teams.description, teams.code, teams.access_type, team_members.privilege,
-            (SELECT COUNT(*) FROM team_members WHERE team_members.team_id = teams.id) AS member_count
-        FROM teams
-        JOIN team_members ON teams.id = team_members.team_id
-        WHERE team_members.user_id = ?
-        ORDER BY team_members.privilege
-    """, session["user_id"])
+                        SELECT teams.id, teams.name, teams.description, teams.code, teams.access_type, team_members.privilege,
+                            (SELECT COUNT(*) FROM team_members WHERE team_members.team_id = teams.id) AS member_count
+                        FROM teams
+                        JOIN team_members ON teams.id = team_members.team_id
+                        WHERE team_members.user_id = ?
+                        ORDER BY team_members.privilege
+                        """, session["user_id"])
     
     return render_template("teams.html", teams=teams, method="get_create_team")
 
@@ -468,16 +466,17 @@ def create_team_api():
                         "error": "To create a team, you must leave another team! Team membership is limited to 20 teams!"})
 
     # Check if necessary fields are filled
-    if not team_name or team_name.strip() == "":
+    print(team_name.strip())
+    if team_name.strip() == "":
         return jsonify({"success": False, 
                         "error": "Missing team name for team creation!"})
-    
-    if not team_access_type or team_access_type.strip() == "":
-        return jsonify({"success": False, 
+
+    if team_access_type.strip() == "":
+        return jsonify({"success": False,
                         "error": "Missing team status for team creation!"})
 
     # If the team code is not provided, generate a random one
-    if not team_code or team_code.strip() == "":
+    if team_code.strip() == "":
         team_code = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(12))
     
     # Name length requirement filter
@@ -523,31 +522,33 @@ def create_team_api():
     if success:
         flash(f"Successfully created {team_name}!")
         return jsonify({"success": True})
+    
     return jsonify({"success": False, 
                     "error": "An error occurred, please try again!"})
 
 
-@app.route("/join_code", methods=["GET"])
+@app.route("/join_team", methods=["GET"])
 @privilege_required("login", "html")
-def join_code():
+def join_team():
     """
     Show the teams page with the join code modal already opened
     """
 
     teams = db.execute("""
-        SELECT teams.id, teams.name, teams.description, teams.code, teams.access_type, team_members.privilege,
-            (SELECT COUNT(*) FROM team_members WHERE team_members.team_id = teams.id) AS member_count
-        FROM teams
-        JOIN team_members ON teams.id = team_members.team_id
-        WHERE team_members.user_id = ?
-        GROUP BY teams.id
-        ORDER BY team_members.privilege
-    """, session["user_id"])
-    return render_template("teams.html", teams=teams, method="get_join_code")
+                        SELECT teams.id, teams.name, teams.description, teams.code, teams.access_type, team_members.privilege,
+                            (SELECT COUNT(*) FROM team_members WHERE team_members.team_id = teams.id) AS member_count
+                        FROM teams
+                        JOIN team_members ON teams.id = team_members.team_id
+                        WHERE team_members.user_id = ?
+                        GROUP BY teams.id
+                        ORDER BY team_members.privilege
+                        """, session["user_id"])
+    
+    return render_template("teams.html", teams=teams, method="get_join_team")
 
-@app.route("/join_code_api", methods=["POST"])
+@app.route("/join_with_credentials_api", methods=["POST"])
 @privilege_required("login", "json")
-def join_code_api():
+def join_with_credentials_api():
     """
     Join a team with the given name and code
     """
@@ -563,20 +564,30 @@ def join_code_api():
                         "error": "To join a team, you must leave another! Team membership is limited to 20 teams!"})
 
     # Check if the provided name and code are valid
-    selected_team_result = db.execute("SELECT id FROM teams WHERE name = ? AND code = ?", team_name, team_code)
+    if team_name and not team_code:
+        selected_team_result = db.execute("SELECT id, access_type FROM teams WHERE name = ?", team_name)
+
+    elif team_name and team_code:
+        selected_team_result = db.execute("SELECT id FROM teams WHERE name = ? AND code = ?", team_name, team_code)
+
     if selected_team_result:
         selected_team_id = selected_team_result[0]["id"]
-        in_team = db.execute("SELECT 1 FROM team_members WHERE team_id = ? AND user_id = ?", selected_team_id, session["user_id"])
         
+        in_team = db.execute("SELECT 1 FROM team_members WHERE team_id = ? AND user_id = ?", selected_team_id, session["user_id"]) 
         if in_team:
             return jsonify({"success": False, 
                             "error": "You are already a member of this team!"})
+            
+        if selected_team_result[0].get("access_type") == "private":
+            return jsonify({"success": False, 
+                            "error": "You cannot join a private team with just the name, please provide a code!"})
         
         # If all is well create the new team and add the user
         success = db.execute("INSERT INTO team_members (team_id, user_id, privilege) VALUES (?, ?, 'read')", selected_team_id, session["user_id"])
         if success:
             flash(f"Successfully joined team {team_name}!")
             return jsonify({"success": True})
+        
         return jsonify({"success": False,
                         "error": "An error occurred, please try again!"})
 
@@ -593,11 +604,14 @@ def leave_team_api(team_name):
     
     data = request.get_json()
     team_id = data.get("team_id")
-
     privilege = db.execute("SELECT privilege FROM team_members WHERE user_id = ? AND team_id = ?", session["user_id"], team_id)[0]["privilege"]
 
-    team_info = db.execute("""SELECT COUNT(team_members.team_id), teams.name FROM team_members 
-                            JOIN teams ON team_members.team_id = teams.id WHERE team_members.team_id = ?""", team_id)[0]
+    team_info = db.execute("""
+                            SELECT COUNT(team_members.team_id), teams.name 
+                            FROM team_members 
+                            JOIN teams ON team_members.team_id = teams.id 
+                            WHERE team_members.team_id = ?
+                            """, team_id)[0]
     
     member_count = team_info["COUNT(team_members.team_id)"]
 
@@ -630,13 +644,12 @@ def team_page(team_name):
     """
     
     topics = db.execute("""
-        SELECT topics.id, topics.name, teams.name AS team_name
-        FROM topics 
-        JOIN team_topics ON topics.id = team_topics.topic_id
-        JOIN teams ON team_topics.team_id = teams.id
-        WHERE teams.name = ?
-        ORDER BY topics.name
-    """, team_name)
+                        SELECT topics.id, topics.name, teams.name AS team_name
+                        FROM topics 
+                        JOIN teams ON topics.team_id = teams.id
+                        WHERE teams.name = ?
+                        ORDER BY topics.name
+                        """, team_name)
 
     return render_template("team_page.html", topics=topics)
     
@@ -656,17 +669,25 @@ def manage_team(team_name):
     """
     Allow user to manage teams that they are an admin in
     """
-    
-    search_query = request.args.get("search", "").strip()
 
-    team = db.execute("SELECT * FROM teams WHERE name = ?", team_name)[0]
-    members = db.execute("""SELECT users.username, team_members.user_id, team_members.privilege 
-                            FROM team_members 
-                            JOIN users ON team_members.user_id = users.id 
-                            WHERE team_members.team_id = ? 
-                            AND users.username LIKE ?
-                            ORDER BY users.username ASC
-                            """, team["id"], f"%{search_query}%")
+    search_query = request.args.get("search", None)
+    search_query = search_query.strip() if search_query is not None else ""
+
+    team = db.execute("""
+                      SELECT *,
+                        (SELECT COUNT(*) FROM team_members WHERE team_members.team_id = teams.id) AS member_count
+                      FROM teams 
+                      WHERE name = ?
+                      """, team_name)[0]
+    
+    members = db.execute("""
+                        SELECT users.username, team_members.user_id, team_members.privilege
+                        FROM team_members 
+                        JOIN users ON team_members.user_id = users.id 
+                        WHERE team_members.team_id = ? 
+                        AND users.username LIKE ?
+                        ORDER BY users.username ASC
+                        """, team["id"], f"%{search_query}%")
 
     if search_query:
         return render_template("manage_team.html", team=team, current_user=session["user_id"], members=members, method="get_search_members")
@@ -688,10 +709,10 @@ def manage_team_api(team_name):
 
     current_data = db.execute("SELECT * FROM teams WHERE id = ?", team_id)[0]
 
-    team_name = data.get("team_name") or team_name
-    team_code = data.get("team_code") or current_data["code"]
-    team_description = data.get("team_description") or current_data["description"]
-    team_access_type = data.get("team_access_type") or current_data["access_type"]
+    team_name = data.get("team_name").strip()
+    team_code = data.get("team_code").strip() or ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(12))
+    team_description = data.get("team_description").strip()
+    team_access_type = data.get("team_access_type").strip()
 
     # Name length requirement filter
     if len(team_name) > 30:
@@ -787,7 +808,8 @@ def manage_member_api(team_name):
         success = db.execute("DELETE FROM team_members WHERE team_id = ? AND user_id = ?", team_id, member_id)
         if success:
             flash(f"Successfully kicked {member_name} from team!")
-            return jsonify({"success": True})    
+            return jsonify({"success": True})
+            
         return jsonify({"success": False, 
                         "error": "An error occurred, please try again!"})
 
@@ -817,6 +839,7 @@ def delete_team_api(team_name):
         if success:
             flash(f"Successfully deleted {team_name}!")
             return jsonify({"success": True})
+        
         return jsonify({"success": False, 
                         "error": "An error occurred, please try again!"})
 
@@ -831,17 +854,25 @@ def edit_team(team_name):
     Show the edit team page
     """
     
-    search_query = request.args.get("search", "").strip()
-    topics = db.execute("""
-        SELECT topics.id, topics.name FROM topics 
-        JOIN team_topics ON topics.id = team_topics.topic_id
-        JOIN teams ON team_topics.team_id = teams.id
-        WHERE teams.name = ?
-        AND topics.name LIKE ?
-        ORDER BY topics.name
-        """, team_name, f"%{search_query}%")
+    search_query = request.args.get("search", None)
+    search_query = search_query.strip() if search_query is not None else ""
+
+    team = db.execute("""
+                      SELECT *,
+                        (SELECT COUNT(*) FROM team_members WHERE team_members.team_id = teams.id) AS member_count
+                      FROM teams 
+                      WHERE name = ?""", team_name)[0]
     
-    team = db.execute("SELECT * FROM teams WHERE name = ?", team_name)[0]
+    topics = db.execute("""
+                        SELECT topics.id, topics.name 
+                        FROM topics 
+                        JOIN teams ON topics.team_id = teams.id
+                        WHERE teams.name = ?
+                        AND topics.name LIKE ?
+                        ORDER BY topics.name
+                        """, team_name, f"%{search_query}%")
+    
+    
     if search_query:
         return render_template("edit_team.html", topics=topics, team=team, method="get_search_topics")
     else:
@@ -876,17 +907,17 @@ def create_topic_api(team_name):
     team_id = db.execute("SELECT id FROM teams WHERE name = ?", team_name)[0]["id"]
 
     # Check the topic count doesn't exceed limit
-    topic_count = db.execute("SELECT COUNT(team_id) FROM team_topics WHERE team_id = ?", team_id)[0]["COUNT(team_id)"]
+    topic_count = db.execute("SELECT COUNT(id) FROM topics WHERE team_id = ?", team_id)[0]["COUNT(id)"]
     if topic_count >= 20:
         return jsonify({"success": False, 
                         "error": "To create a topic, you must delete another topic! Topic count is limited to 20 topics!"})
 
     # Create the new topic
-    topic_id = db.execute("INSERT INTO topics (name) VALUES (?)", topic_name)
-    success = db.execute("INSERT INTO team_topics (team_id, topic_id) VALUES (?, ?)", team_id, topic_id)
+    success = db.execute("INSERT INTO topics (name, team_id) VALUES (?, ?)", topic_name, team_id)
     if success:
         flash(f"Successfully created {topic_name}!")
         return jsonify({"success": True})
+    
     return jsonify({"success": False, 
                     "error": "An error occurred, please try again!"})
 
@@ -905,20 +936,21 @@ def edit_topic_api(team_name, topic_name):
                         "error": "Please provide a new name!"})
 
     team_id = db.execute("SELECT id FROM teams WHERE name = ?", team_name)[0]["id"]
-    topic_id = db.execute("SELECT id FROM topics WHERE name = ?", topic_name)[0]["id"]
-
+    topic_data = db.execute("SELECT id FROM topics WHERE name = ? AND team_id = ?", topic_name, team_id)[0]
+   
     # Check if the topic exists
-    exists = db.execute("SELECT 1 FROM team_topics WHERE topic_id = ? AND team_id = ?", topic_id, team_id)
+    exists = db.execute("SELECT 1 FROM topics WHERE id = ? AND team_id = ?", topic_data["id"], team_id)
     if not exists:
         return jsonify({"success": False, 
                         "error": "Topic does not exist!"})
 
     # Check if deletion was requested
     if requested_name == "D":
-        success = db.execute("DELETE FROM topics WHERE id = ?", topic_id)
+        success = db.execute("DELETE FROM topics WHERE id = ?", topic_data["id"])
         if success:
             flash(f"Successfully deleted {topic_name}!")
             return jsonify({"success": True})
+        
         return jsonify({"success": False,
                         "error": "An error occurred, please try again!"})
 
@@ -932,11 +964,11 @@ def edit_topic_api(team_name, topic_name):
                         "error": f"Team name contains {name_length} characters, must be at least 7 characters!"})
 
     # Update the topic name
-    success = db.execute("UPDATE topics SET name = ? WHERE id = ?", requested_name, topic_id)
-    print(success, requested_name, topic_id)
+    success = db.execute("UPDATE topics SET name = ? WHERE id = ?", requested_name, topic_data["id"])
     if success:
         flash(f"Successfully updated topic's name to {requested_name}!")
         return jsonify({"success": True})
+    
     return jsonify({"success": False,
                     "error": "An error occurred, please try again!"})
 
@@ -959,24 +991,24 @@ def board(team_name, topic_name):
         {"id": "done", "name": "Done"}
     ]
     
-    user_privilege = db.execute("""SELECT privilege FROM team_members
+    user_privilege = db.execute("""
+                                SELECT privilege FROM team_members
                                 JOIN teams ON team_members.team_id = teams.id
                                 WHERE team_members.user_id = ?
-                                AND teams.name = ?""", session["user_id"], team_name)[0]["privilege"]
+                                AND teams.name = ?
+                                """, session["user_id"], team_name)[0]["privilege"]
     
     if user_privilege in ['admin', 'edit']:
         statuses.append({"id": "delete", "name": "DELETE"})
 
     cards = db.execute("""
-        SELECT notes.id, notes.content, notes.status, topic_notes.topic_id
-        FROM notes
-        JOIN topic_notes ON notes.id = topic_notes.note_id
-        JOIN team_topics ON topic_notes.topic_id = team_topics.topic_id
-        JOIN topics ON team_topics.topic_id = topics.id
-        JOIN teams ON team_topics.team_id = teams.id
-        WHERE teams.name = ?
-        AND topics.name = ?
-    """, team_name, topic_name)
+                        SELECT notes.id, notes.content, notes.status, notes.topic_id
+                        FROM notes
+                        JOIN topics ON notes.topic_id = topics.id
+                        JOIN teams ON topics.team_id = teams.id
+                        WHERE teams.name = ?
+                        AND topics.name = ?
+                        """, team_name, topic_name)
 
     return render_template("board.html", statuses=statuses, cards=cards)
 

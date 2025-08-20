@@ -80,36 +80,37 @@
                     </div>
 
                     <div class="modal-body">
-                        <form id="manage-team-form">
-                            <div class="mb-3">
-                                <label for="manage-team-name" class="form-label">Team Name</label>
-                                <input type="text" class="form-control" id="manage-team-name" name="manage-team-name" placeholder="Enter team name" required maxlength="30" minlength="7" autocomplete="off">
-                            </div>
+                        <div class="mb-3">
+                            <label for="manage-team-name" class="form-label">Team Name</label>
+                            <input type="text" class="form-control" id="manage-team-name" name="manage-team-name" placeholder="Enter team name" value="{{ team.name }}" required maxlength="30" minlength="7" autocomplete="off">
+                        </div>
 
-                            <div class="mb-3">
-                                <label for="manage-team-code" class="form-label">Team Code</label>
-                                <input type="text" class="form-control" id="manage-team-code" name="manage-team-code" placeholder="Enter team code" maxlength="12" minlength="6" autocomplete="off">
-                            </div>
+                        <div class="mb-3">
+                            <label for="manage-team-code" class="form-label">Team Code</label>
+                            <input type="text" class="form-control" id="manage-team-code" name="manage-team-code" placeholder="Enter team code" value="{{ team.code }}" maxlength="12" minlength="6" autocomplete="off">
+                        </div>
 
-                            <div class="mb-3">
-                                <label for="manage-team-description" class="form-label">Team Description</label>
-                                <textarea class="form-control" id="manage-team-description" name="manage-team-description" placeholder="Enter description" maxlength="500" autocomplete="off"></textarea>
-                            </div>
+                        <div class="mb-3">
+                            <label for="manage-team-description" class="form-label">Team Description</label>
+                            <textarea class="form-control" id="manage-team-description" name="manage-team-description" placeholder="Enter description" maxlength="500" autocomplete="off">{{ team.description }}</textarea>
+                        </div>
 
-                            <div class="mb-3">
-                                <label for="manage-team-access-type" class="form-label">Status</label>
-                                <select class="form-select form-control" id="manage-team-access-type" name="manage-team-access-type">
-                                    <option value="" selected>Select Status!</option>
-                                    <option value="public">Public</option>
+                        <div class="mb-3">
+                            <label for="manage-team-access-type" class="form-label">Status</label>
+                            <select class="form-select form-control" id="manage-team-access-type" name="manage-team-access-type">
+                                {% if team.access_type == "public" %}
+                                    <option value="public" selected>Public</option>
                                     <option value="private">Private</option>
-                                </select>                            
-                            </div>
-                        </form>
+                                {% else %}
+                                    <option value="private" selected>Private</option>
+                                    <option value="public">Public</option>
+                                {% endif %}
+                            </select>                            
+                        </div>
                     </div>
 
                     <div class="modal-footer d-flex flex-column justify-content-center">
                         <p><i>(If team code is left blank, a random code will be generated)</i></p>
-                        <p><i>(Every default field will revert to the original value)</i></p>
                         <button type="submit" class="btn btn-warning" id="submit-manage-team" data-bs-dismiss="modal" disabled>Save Changes</button>
                     </div>
                 </div>
@@ -128,7 +129,7 @@
                         <div class="search-control d-flex justify-content-center mb-4">
                             <form class="d-flex align-items-center" id="team-search-form">
                                 <input type="text" autocomplete="off" class="form-control management-search" id="search-input" name="search" placeholder="Search Teams...">
-                                <a href="/manage_team/{{ team.name }}" class="btn btn-secondary ms-2" id="clear-search" >&times;</a>
+                                <a href="/manage_team/{{ team.name }}?search=" class="btn btn-secondary ms-2" id="clear-search" >&times;</a>
                             </form>
                         </div>
 

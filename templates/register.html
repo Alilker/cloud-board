@@ -17,26 +17,24 @@
 
 {% block main %}
 
-    <form id="register-form">
-        <div class="mb-3">
-            <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="username" 
-            id="username" placeholder="Username" type="text">
-        </div>
-        <p id="username-feedback" class="mt-2 username-feedback"></p>
+    <div class="mb-3">
+        <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="username" 
+        id="username" placeholder="Username" type="text">
+    </div>
+    <p id="username-feedback" class="mt-2 username-feedback"></p>
 
-        <div class="mb-3">
-            <input class="form-control mx-auto w-auto" name="password" placeholder="Password" type="password" 
-            id="password" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])\S{8,}" minlength="8" maxlength="20"
-            title="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters">
-        </div>
-        <p id="password-feedback" class="mt-2 password-feedback"></p>
+    <div class="mb-3">
+        <input class="form-control mx-auto w-auto" name="password" placeholder="Password" type="password" 
+        id="password" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])\S{8,}" minlength="8" maxlength="20"
+        title="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters">
+    </div>
+    <p id="password-feedback" class="mt-2 password-feedback"></p>
 
-        <div class="mb-3">
-            <input class="form-control mx-auto w-auto" name="confirmation" placeholder="Confirm Password" type="password" id="confirmation">
-        </div>
-        <p id="confirmation-feedback" class="mt-2 confirmation-feedback"></p>
-        
-        <button class="btn btn-primary" type="button" id="register-submit" disabled>Register</button>
-    </form>
+    <div class="mb-3">
+        <input class="form-control mx-auto w-auto" name="confirmation" placeholder="Confirm Password" type="password" id="confirmation">
+    </div>
+    <p id="confirmation-feedback" class="mt-2 confirmation-feedback"></p>
+    
+    <button class="btn btn-primary" type="button" id="register-submit" disabled>Register</button>
     
 {% endblock %}

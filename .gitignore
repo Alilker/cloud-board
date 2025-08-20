@@ -3,11 +3,6 @@ __pycache__/
 *.pyo
 *.pyd
 .Python
-env/
-venv/
-.venv/
 .env
 flask_session/
-*.db-journal
-.DS_Store
 .vscode/

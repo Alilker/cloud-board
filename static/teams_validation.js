@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Button declarations
     const createTeamSubmit = document.querySelector('#submit-create-team');
-    const joinCodeSubmit = document.querySelector('#join-code-submit');
+    const joinTeamSubmit = document.querySelector('#join-team-submit');
 
     // Variable globalization
     let teamId = null;
@@ -19,8 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } 
             else if (event.target.id === 'join-team-name' || event.target.id === 'join-team-code') {
                 const teamName = document.getElementById('join-team-name')?.value.trim() || '';
-                const teamCode = document.getElementById('join-team-code')?.value.trim() || '';
-                joinCodeSubmit.disabled = !(teamName && teamCode);
+                joinTeamSubmit.disabled = !teamName;
             }
         });
     }
@@ -77,13 +76,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function for join team form submission initialization
     function initializeJoinTeam() {
-        joinCodeSubmit.addEventListener('click', function(event) {
+        joinTeamSubmit.addEventListener('click', function(event) {
             event.preventDefault();
 
             const teamName = document.querySelector('#join-team-name').value.trim();
             const teamCode = document.querySelector('#join-team-code').value.trim();
 
-            fetch('/join_code_api', {
+            fetch('/join_with_credentials_api', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
@@ -130,7 +129,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    window.location.reload();
+                    window.location.href = '/teams';
                 } 
                 else {
                     showError(data.error || 'An error occurred, please try again later');

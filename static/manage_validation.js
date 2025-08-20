@@ -102,12 +102,15 @@ document.addEventListener('DOMContentLoaded', function() {
         let teamName, teamCode, teamDescription, teamAccessType;
 
         // Enable the submit button when there is any input
-        document.addEventListener('input', function() {
-            teamName = document.getElementById('manage-team-name')?.value.trim();
-            teamCode = document.getElementById('manage-team-code')?.value.trim();
-            teamDescription = document.getElementById('manage-team-description')?.value.trim();
-            teamAccessType = document.getElementById('manage-team-access-type')?.value.trim();
-            manageTeamSubmit.disabled = (teamName === '' && teamCode === '' && teamDescription === '' && teamAccessType === '');
+        teamName = document.getElementById('manage-team-name');
+        teamCode = document.getElementById('manage-team-code');
+        teamDescription = document.getElementById('manage-team-description');
+        teamAccessType = document.getElementById('manage-team-access-type');
+
+        [teamName, teamCode, teamDescription, teamAccessType].forEach(input => {
+            input.addEventListener('input', function() {
+                manageTeamSubmit.disabled = false;
+            });
         });
 
         manageTeamSubmit.addEventListener('click', function(event) {
@@ -118,10 +121,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
-                    "team_name": teamName, 
-                    "team_code": teamCode,
-                    "team_description": teamDescription,
-                    "team_access_type": teamAccessType
+                    "team_name": teamName.value.trim(), 
+                    "team_code": teamCode.value.trim(),
+                    "team_description": teamDescription.value.trim(),
+                    "team_access_type": teamAccessType.value.trim()
                 })
             })
             .then(res => res.json())
