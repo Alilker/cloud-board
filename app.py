@@ -670,8 +670,7 @@ def manage_team(team_name):
     Allow user to manage teams that they are an admin in
     """
 
-    search_query = request.args.get("search", None)
-    search_query = search_query.strip() if search_query is not None else ""
+    search_query = request.args.get("search", "")
 
     team = db.execute("""
                       SELECT *,
@@ -689,7 +688,7 @@ def manage_team(team_name):
                         ORDER BY users.username ASC
                         """, team["id"], f"%{search_query}%")
 
-    if search_query:
+    if "search" in request.args:
         return render_template("manage_team.html", team=team, current_user=session["user_id"], members=members, method="get_search_members")
     else:
         return render_template("manage_team.html", team=team, current_user=session["user_id"], members=members)
@@ -854,8 +853,7 @@ def edit_team(team_name):
     Show the edit team page
     """
     
-    search_query = request.args.get("search", None)
-    search_query = search_query.strip() if search_query is not None else ""
+    search_query = request.args.get("search", "")
 
     team = db.execute("""
                       SELECT *,
@@ -871,9 +869,9 @@ def edit_team(team_name):
                         AND topics.name LIKE ?
                         ORDER BY topics.name
                         """, team_name, f"%{search_query}%")
-    
-    
-    if search_query:
+
+
+    if "search" in request.args:
         return render_template("edit_team.html", topics=topics, team=team, method="get_search_topics")
     else:
         return render_template("edit_team.html", topics=topics, team=team)
