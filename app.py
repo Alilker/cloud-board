@@ -1,4 +1,4 @@
-from flask import Flask, flash, redirect, render_template, request, session, jsonify
+from flask import Flask, flash, redirect, render_template, request, session, jsonify, send_file
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 from helpers import privilege_required, db
@@ -27,6 +27,10 @@ def after_request(response):
     response.headers["Pragma"] = "no-cache"
     return response
 
+# Temporary endpoint for database retrieval from Render
+@app.route(f"/download-db/{app.secret_key}", methods=["GET"])
+def download_db():
+    return send_file("cloudboard.db", as_attachment=True)
 
 # Pretty much copy pasted from 
 # https://stackoverflow.com/questions/29332056/global-error-handler-for-any-exception
@@ -100,7 +104,7 @@ def login_api():
     session["username"] = rows[0]["username"]
 
     # Return success
-    flash("Successfully logged in!")
+    flash(f"Successfully logged in as {session['username']}!")
     return jsonify({"success": True})
 
 
@@ -185,7 +189,7 @@ def register_api():
         session["username"] = username
 
         # Return success response
-        flash("Successfully registered!")
+        flash(f"Successfully registered as {session['username']}!")
         return jsonify({"success": True})
 
     return jsonify({"success": False, 
