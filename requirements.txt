@@ -4,3 +4,4 @@ requests==2.31.0
 Werkzeug==2.3.7
 gunicorn==21.2.0
 cs50==9.4.0
+python-dotenv==1.1.1
