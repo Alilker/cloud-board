@@ -18,6 +18,7 @@ app.config["SESSION_TYPE"] = "filesystem"
 app.secret_key = getenv("SECRET_KEY")
 Session(app)
 
+app.jinja_env.add_extension('jinja2.ext.do')
 
 @app.after_request
 def after_request(response):
@@ -380,7 +381,7 @@ def join_team_api():
         db.execute("""
                     INSERT INTO 
                     team_members (team_id, user_id, privilege) 
-                    VALUES (?, ?, 'read')
+                    VALUES (?, ?, 'drag-only')
                     """, selected_team_id, session["user_id"])
 
         team_name = db.execute("SELECT name FROM teams WHERE id = ?", selected_team_id)[0]["name"]
@@ -582,7 +583,7 @@ def join_with_credentials_api():
                             "error": "You cannot join a private team with just the name, please provide a code!"})
         
         # If all is well create the new team and add the user
-        success = db.execute("INSERT INTO team_members (team_id, user_id, privilege) VALUES (?, ?, 'read')", selected_team_id, session["user_id"])
+        success = db.execute("INSERT INTO team_members (team_id, user_id, privilege) VALUES (?, ?, 'drag-only')", selected_team_id, session["user_id"])
         if success:
             flash(f"Successfully joined team {team_name}!")
             return jsonify({"success": True})
@@ -779,7 +780,7 @@ def manage_member_api(team_name):
         return jsonify({"success": False, 
                         "error": "No privilege level provided!"})
 
-    if new_privilege not in ["admin", "edit", "read", "kick"]:
+    if new_privilege not in ["admin", "editor", "drag-only", "kick"]:
         return jsonify({"success": False, 
                         "error": "Invalid privilege level!"})
 
@@ -981,7 +982,7 @@ Logic and route block end for team management
 Logic and route block end regarding board viewing and management.
 """
 
-@app.route("/team/<string:team_name>/topic/<string:topic_name>")
+@app.route("/team/<string:team_name>/topic/<string:topic_name>", methods=["GET"])
 @privilege_required("member", "html")
 def board(team_name, topic_name):
     """
@@ -1010,9 +1011,9 @@ def board(team_name, topic_name):
     return render_template("board.html", cards=cards, privilege=privilege, info=info)
 
 
-@app.route("/create_note/<string:team_name>/<string:topic_name>", methods=["POST"])
+@app.route("/create_note_api/<string:team_name>/<string:topic_name>", methods=["POST"])
 @privilege_required("editor", "json")
-def create_note(team_name, topic_name):
+def create_note_api(team_name, topic_name):
     """
     Create a new note for a specific topic in a team
     """
@@ -1044,9 +1045,9 @@ def create_note(team_name, topic_name):
     return jsonify({"success": True})
 
 
-@app.route("/edit_note/<string:team_name>/<string:topic_name>", methods=["POST"])
+@app.route("/edit_note_api/<string:team_name>/<string:topic_name>", methods=["POST"])
 @privilege_required("editor", "json")
-def edit_note(team_name, topic_name):
+def edit_note_api(team_name, topic_name):
     """
     Edit an existing note for a specific topic in a team
     """
@@ -1079,9 +1080,9 @@ def edit_note(team_name, topic_name):
     return jsonify({"success": True})
 
 
-@app.route("/move_note/<string:team_name>/<string:topic_name>", methods=["POST"])
+@app.route("/move_note_api/<string:team_name>/<string:topic_name>", methods=["POST"])
 @privilege_required("member", "json")
-def move_note(team_name, topic_name):
+def move_note_api(team_name, topic_name):
     """
     Change a notes status in a topic
     """
@@ -1089,6 +1090,12 @@ def move_note(team_name, topic_name):
     data = request.get_json()
     note_id = data["note_id"]
     new_status = data["column_id"]
+    is_authorized = data["is_authorized"]
+    
+    # Check if user is trying mess with announcements while not authorized
+    if not is_authorized and new_status == 'announcements':
+        return jsonify({"success": False,
+                        "error": "You are not authorized for this action!"})
 
     # Check if the note exists
     note_valid = db.execute("SELECT 1 FROM notes WHERE id = ?", note_id)
@@ -1097,7 +1104,7 @@ def move_note(team_name, topic_name):
                         "error": "Note does not exist!"})
 
     # Check if the new status is valid
-    if new_status not in ["announcement", "todo", "doing", "done", "delete"]:
+    if new_status not in ["announcements", "todo", "doing", "done", "delete"]:
         return jsonify({"success": False, 
                         "error": "Invalid status!"})
     

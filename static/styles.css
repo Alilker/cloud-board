@@ -110,6 +110,6 @@ nav .navbar-brand .green
     border-radius: 0;
 }
 
-.accordion[data-status="announcement"] .accordion-item, .accordion[data-status="announcement"] .accordion-button {
+.accordion[data-status="announcements"] .accordion-item, .accordion[data-status="announcements"] .accordion-button {
     background-color: #8be9a1;
 }

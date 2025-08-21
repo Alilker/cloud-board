@@ -36,6 +36,8 @@
     <p class="card-text">Status: {{ team.access_type.capitalize() }}</p>
     <p class="card-text">Team Code: {{ team.code }}</p>
 
+    <a href="/team/{{ team.name }}" class="btn btn-primary mb-3">View team!</a>
+
     <div class="text-center mb-4">
         <button type="button" class="btn btn-warning mb-1" data-bs-toggle="modal" data-bs-target="#manage-team-modal">
             Manage Team!
@@ -86,16 +88,6 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="manage-team-code" class="form-label">Team Code</label>
-                            <input type="text" class="form-control" id="manage-team-code" name="manage-team-code" placeholder="Enter team code" value="{{ team.code }}" maxlength="12" minlength="6" autocomplete="off">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="manage-team-description" class="form-label">Team Description</label>
-                            <textarea class="form-control" id="manage-team-description" name="manage-team-description" placeholder="Enter description" maxlength="500" autocomplete="off">{{ team.description }}</textarea>
-                        </div>
-
-                        <div class="mb-3">
                             <label for="manage-team-access-type" class="form-label">Status</label>
                             <select class="form-select form-control" id="manage-team-access-type" name="manage-team-access-type">
                                 {% if team.access_type == "public" %}
@@ -106,6 +98,16 @@
                                     <option value="public">Public</option>
                                 {% endif %}
                             </select>                            
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="manage-team-code" class="form-label">Team Code</label>
+                            <input type="text" class="form-control" id="manage-team-code" name="manage-team-code" placeholder="Enter team code" value="{{ team.code }}" maxlength="12" minlength="6" autocomplete="off">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="manage-team-description" class="form-label">Team Description</label>
+                            <textarea class="form-control" id="manage-team-description" name="manage-team-description" placeholder="Enter description" maxlength="500" autocomplete="off">{{ team.description }}</textarea>
                         </div>
                     </div>
 
@@ -144,7 +146,7 @@
                                     </div>
 
                                     <select class="form-control text-center mb-3">
-                                        {% for privilege, privilege_name in [('admin', 'Admin'), ('edit', 'Editor'), ('read', 'Board-Editor'), ('kick', 'Kick')] %}
+                                        {% for privilege, privilege_name in [('admin', 'Admin'), ('editor', 'Editor'), ('drag-only', 'Drag-Only'), ('kick', 'Kick')] %}
                                             {% if privilege == member.privilege %}
                                                 <option value="{{ privilege }}" selected="selected">{{ privilege_name }}</option>
                                             {% else %}

@@ -35,9 +35,9 @@
     {% endif %}
     <p class="card-text">Member count: {{ team.member_count }}</p>
     <p class="card-text">Status: {{ team.access_type.capitalize() }}</p>
-    {% if team.access_type == "public" or team.privilege == "admin" %}
-        <p class="card-text">Team Code: {{ team.code }}</p>
-    {% endif %}
+    <p class="card-text">Team Code: {{ team.code }}</p>
+
+    <a href="/team/{{ team.name }}" class="btn btn-primary mb-3">View team!</a>
 
     <div class="text-center mb-4">
         <button type="button" class="btn btn-success" id="cancel-member-changes" data-bs-toggle="modal" data-bs-target="#create-topics-modal">
