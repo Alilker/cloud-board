@@ -102,26 +102,15 @@ The team board page allows users to see the board of a topic of a team they are 
 
 ## Getting Started
 
-### 1. Clone the repository:
-
-    git clone https://github.com/alilker/cloudboard.git
+### 1. Fork this branch to a new repo
 
 
-### 2. Install dependencies:
 
-    pip install -r requirements.txt
-
-### 3. Initialize the database:
-
-    sqlite3 database.db ".read schema.sql"
-
-### 4. Create a .env file with the following format
+### 2. Create a .env file with the following format
 
     SECRET_KEY=YOUR_SECRET_KEY_HERE
 
-### 5. Run the app:
-
-    python app.py
+### 3. Link the new branch to Render!
 
 
 ## License
