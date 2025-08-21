@@ -28,7 +28,7 @@
 
     <div class="mb-4">
         <h1 class="text-center">{{ info.topic_name }}</h1>
-        <p class="text-center text-muted">Team: {{ info.team_name }}</p>
+        <p class="text-center">Team: {{ info.team_name }}</p>
         <a href="/team/{{ info.team_name }}" class="btn btn-secondary">Back To Team</a>
     </div>
 
@@ -40,7 +40,7 @@
         <div class="accordion-row py-3 d-flex flex-column flex-md-row">
             {% for status in statuses %}
                 {% if status.id == 'delete' %}
-                    <div class="delete-column p-3" data-status="{{ status.id }}">
+                    <div class="btn delete-column p-3" data-status="{{ status.id }}">
                         <div class="alert alert-danger mb-0" role="alert">
                             <div>DELETE</div>
                         </div>
@@ -50,7 +50,7 @@
                         </div>
                     </div>
                 {% else %}
-                    <div class="accordion mb-3" data-status="{{ status.id }}">
+                    <div class="btn accordion mb-3" data-status="{{ status.id }}">
                         <div class="accordion-item">
                             <h2 class="accordion-header">
                                 <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ status.id }}" aria-expanded="true" aria-controls="collapse-{{ status.id }}">
