@@ -1,6 +1,6 @@
 # Cloud-Board (A CS50x final project)
 
-#### Video Demo: <youtube.com>
+#### Video Demo: https://youtu.be/x1d6Z4EVe2A
 #### Description:
 Cloud-Board is a simple kanban board centered team-management and organization platform. It makes collaboration easy with its intuitive design and user-friendly visual interface for managing tasks and projects. (A CS50x final project!)
 
