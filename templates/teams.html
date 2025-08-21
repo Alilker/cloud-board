@@ -55,8 +55,8 @@
     </div>
 
     <div id="team-related">
-        {% set your_teams = teams | selectattr("privilege", "in", ["admin", "edit"]) | list %}
-        {% set other_teams = teams | selectattr("privilege", "equalto", "read") | list %}
+        {% set your_teams = teams | selectattr("privilege", "in", ["admin", "editor"]) | list %}
+        {% set other_teams = teams | selectattr("privilege", "equalto", "drag-only") | list %}
 
         {% if your_teams %}
         <div id="your-teams-section">
@@ -144,6 +144,15 @@
                         </div>
 
                         <div class="mb-3">
+                            <label for="create-team-access-type" class="form-label">Status<span class="text-danger">*</span></label>
+                            <select class="form-control form-select" id="create-team-access-type" name="create-team-access-type">
+                                <option value="" disabled selected>Select Status!</option>
+                                <option value="public">Public</option>
+                                <option value="private">Private</option>
+                            </select>                            
+                        </div>
+
+                        <div class="mb-3">
                             <label for="create-team-code" class="form-label">Team Code</label>
                             <input type="text" class="form-control" id="create-team-code" name="create-team-code" placeholder="Enter team code" maxlength="12" minlength="6" autocomplete="off">
                         </div>
@@ -151,15 +160,6 @@
                         <div class="mb-3">
                             <label for="create-team-description" class="form-label">Team Description</label>
                             <textarea class="form-control" id="create-team-description" name="create-team-description" placeholder="Enter description" maxlength="500" autocomplete="off"></textarea>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="create-team-access-type" class="form-label">Status<span class="text-danger">*</span></label>
-                            <select class="form-control form-select" id="create-team-access-type" name="create-team-access-type">
-                                <option value="" disabled selected>Select Status!</option>
-                                <option value="public">Public</option>
-                                <option value="private">Private</option>
-                            </select>                            
                         </div>
                     </div>
 

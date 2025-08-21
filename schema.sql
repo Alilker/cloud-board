@@ -25,8 +25,6 @@ CREATE TABLE IF NOT EXISTS "team_members" (
 CREATE TABLE IF NOT EXISTS "notes" (
     "id"      INTEGER NOT NULL UNIQUE,
     "content" TEXT NOT NULL,
-    "due_by"  INTEGER,
-    "type"    TEXT NOT NULL,
     "status"  TEXT NOT NULL,
     "topic_id" INTEGER NOT NULL,
     PRIMARY KEY("id" AUTOINCREMENT),

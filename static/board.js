@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize variables that get used in multiple places
     let currentEditNoteId;
     let currentColumnId;
+    let isAuthorized
 
     const teamName = document.getElementById("team-name").value;
     const topicName = document.getElementById("topic-name").value;
@@ -10,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Function for mobile detection as drag and drop doesn't work on mobile
     // Reference resource: https://www.reddit.com/r/neocities/comments/1c4b0r1/comment/kzmt0sq/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
     function isMobile() {
-        const isMobile = window.matchMedia("(any-hover:none)").matches;
+        const isMobile = (navigator.userAgent.includes("Mobile"));
 
         if (isMobile) {
 
@@ -38,7 +39,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function initializeNoteDrag() {
 
     const privilege = document.getElementById('privilege').value;
-    const is_authorized = privilege === 'admin' || privilege === 'edit';
+
+        isAuthorized = privilege === 'admin' || privilege === 'editor';
 
         // Event listeners for drag events
         document.addEventListener('dragstart', function(event) {
@@ -47,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Don't allow announcement notes to be dragged if user isn't authorized
             const parentAccordion = card.closest('.accordion');
-            if (parentAccordion && parentAccordion.dataset.status === 'announcements' && !is_authorized) {
+            if (parentAccordion && parentAccordion.dataset.status === 'announcements' && !isAuthorized) {
                 event.preventDefault();
                 return;
             }
@@ -69,7 +71,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!dropZone) return;
 
             // Don't allow announcement notes to be dropped if user isn't authorized
-            if (dropZone.dataset.status === 'announcement' && !['admin', 'edit'].includes(privilege)) {
+            if (dropZone.dataset.status === 'announcements' && !isAuthorized) {
                 return;
             }
 
@@ -79,12 +81,13 @@ document.addEventListener('DOMContentLoaded', function() {
             dropZone.querySelector('.cards-section').appendChild(draggedNote);
             
             // On drag permanently update note state
-            fetch(`/move_note/${teamName}/${topicName}`, {
+            fetch(`/move_note_api/${teamName}/${topicName}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     note_id: draggedNoteId, 
-                    column_id: dropZone.dataset.status 
+                    column_id: dropZone.dataset.status,
+                    is_authorized: isAuthorized
                 })
             })
             .then(res => res.json())
@@ -127,7 +130,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('add-note-button').addEventListener('click', function() {
             const noteText = document.getElementById('add-note-content').value.trim();
 
-            fetch(`/create_note/${teamName}/${topicName}`, {
+            fetch(`/create_note_api/${teamName}/${topicName}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
@@ -160,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Check if a note is clicked
         document.addEventListener('click', function(event) {
             const noteCard = event.target.closest('.draggable-card');
-            if (noteCard) {
+            if (noteCard && isAuthorized) {
                 currentEditNoteId = noteCard.dataset.noteId;
                 document.getElementById('edit-note-content').value = noteCard.querySelector('.card-text').textContent;
                 editNoteButton.disabled = true;
@@ -177,7 +180,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('edit-note-button').addEventListener('click', function() {
             const editContent = document.getElementById('edit-note-content').value.trim();
 
-            fetch(`/edit_note/${teamName}/${topicName}`, {
+            fetch(`/edit_note_api/${teamName}/${topicName}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
