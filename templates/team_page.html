@@ -15,6 +15,9 @@
 
 {% block main %}
 
+    <h1 class="text-center text-muted mb-4">Team: {{ team_name }}</h1>
+    <a href="/teams" class="btn btn-secondary mb-4">Back To Teams</a>
+
     {% if topics %}
         {% for topic in topics %}
             <div class="card text-center mb-3">

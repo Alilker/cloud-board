@@ -37,15 +37,15 @@
     <p class="card-text">Team Code: {{ team.code }}</p>
 
     <div class="text-center mb-4">
-        <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#manage-team-modal">
+        <button type="button" class="btn btn-warning mb-1" data-bs-toggle="modal" data-bs-target="#manage-team-modal">
             Manage Team!
         </button>
 
-        <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#manage-members-modal">
+        <button type="button" class="btn btn-warning mb-1" data-bs-toggle="modal" data-bs-target="#manage-members-modal">
             Manage Members!
         </button>
 
-        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delete-teams-modal">
+        <button type="button" class="btn btn-danger mb-1" data-bs-toggle="modal" data-bs-target="#delete-teams-modal">
             DELETE Team!
         </button>
     </div>
@@ -110,7 +110,7 @@
                     </div>
 
                     <div class="modal-footer d-flex flex-column justify-content-center">
-                        <p><i>(If team code is left blank, a random code will be generated)</i></p>
+                        <p><i>(If team code is left blank, a new random code will be generated)</i></p>
                         <button type="submit" class="btn btn-warning" id="submit-manage-team" data-bs-dismiss="modal" disabled>Save Changes</button>
                     </div>
                 </div>

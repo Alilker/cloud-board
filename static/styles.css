@@ -31,6 +31,10 @@ nav .navbar-brand .green
     flex: 1;
 }
 
+.logged-in-index-button {
+    margin-top: auto;
+    padding-bottom: 10px;
+}
 .logged-in-index-container {
     max-width: 800px;
     margin: 0 auto;
@@ -68,3 +72,44 @@ nav .navbar-brand .green
     z-index: 10;
 }
 
+.accordion-row {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.accordion,
+.delete-column {
+    flex: 1;
+    min-width: 250px;
+}
+
+.delete-column {
+    background-color: #ffebee;
+    border: 2px dashed #dc3545;
+    border-radius: 10px;
+    flex: 1;
+}
+
+.accordion-row {
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.accordion,
+.delete-column {
+    flex: 1;
+    min-width: 250px;
+}
+
+.mobile-column {
+    width: 100%;
+}
+
+.add-note-button {
+    border-radius: 0;
+}
+
+.accordion[data-status="announcement"] .accordion-item, .accordion[data-status="announcement"] .accordion-button {
+    background-color: #8be9a1;
+}

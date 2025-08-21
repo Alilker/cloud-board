@@ -466,7 +466,6 @@ def create_team_api():
                         "error": "To create a team, you must leave another team! Team membership is limited to 20 teams!"})
 
     # Check if necessary fields are filled
-    print(team_name.strip())
     if team_name.strip() == "":
         return jsonify({"success": False, 
                         "error": "Missing team name for team creation!"})
@@ -651,7 +650,7 @@ def team_page(team_name):
                         ORDER BY topics.name
                         """, team_name)
 
-    return render_template("team_page.html", topics=topics)
+    return render_template("team_page.html", topics=topics, team_name=team_name)
     
 """
 Logic and route block end regarding team viewing, team creation, team leaving.
@@ -856,10 +855,12 @@ def edit_team(team_name):
     search_query = request.args.get("search", "")
 
     team = db.execute("""
-                      SELECT *,
-                        (SELECT COUNT(*) FROM team_members WHERE team_members.team_id = teams.id) AS member_count
-                      FROM teams 
-                      WHERE name = ?""", team_name)[0]
+                    SELECT teams.name, teams.description, teams.code, teams.access_type, team_members.privilege,
+                    (SELECT COUNT(*) FROM team_members WHERE team_members.team_id = teams.id) AS member_count
+                    FROM teams 
+                    JOIN team_members ON teams.id = team_members.team_id
+                    WHERE name = ?
+                    """, team_name)[0]
     
     topics = db.execute("""
                         SELECT topics.id, topics.name 
@@ -979,26 +980,24 @@ Logic and route block end for team management
 """
 Logic and route block end regarding board viewing and management.
 """
+
 @app.route("/team/<string:team_name>/topic/<string:topic_name>")
 @privilege_required("member", "html")
 def board(team_name, topic_name):
-    statuses = [
-        {"id": "announcement", "name": "Announcements"},
-        {"id": "todo", "name": "To Do"},
-        {"id": "doing", "name": "Doing"},
-        {"id": "done", "name": "Done"}
-    ]
+    """
+    Show a teams topics
+    """
     
-    user_privilege = db.execute("""
+    info = {"team_name": team_name, 
+            "topic_name": topic_name}
+    
+    privilege = db.execute("""
                                 SELECT privilege FROM team_members
                                 JOIN teams ON team_members.team_id = teams.id
                                 WHERE team_members.user_id = ?
                                 AND teams.name = ?
                                 """, session["user_id"], team_name)[0]["privilege"]
     
-    if user_privilege in ['admin', 'edit']:
-        statuses.append({"id": "delete", "name": "DELETE"})
-
     cards = db.execute("""
                         SELECT notes.id, notes.content, notes.status, notes.topic_id
                         FROM notes
@@ -1007,23 +1006,111 @@ def board(team_name, topic_name):
                         WHERE teams.name = ?
                         AND topics.name = ?
                         """, team_name, topic_name)
+    
+    return render_template("board.html", cards=cards, privilege=privilege, info=info)
 
-    return render_template("board.html", statuses=statuses, cards=cards)
+
+@app.route("/create_note/<string:team_name>/<string:topic_name>", methods=["POST"])
+@privilege_required("editor", "json")
+def create_note(team_name, topic_name):
+    """
+    Create a new note for a specific topic in a team
+    """
+    
+    data = request.get_json()
+    content = data.get("content")
+    status = data.get("status")
+
+    # Check if the content exists
+    if not content:
+        return jsonify({"success": False, 
+                        "error": "Please provide note content!"})
+
+    team_id = db.execute("SELECT id FROM teams WHERE name = ?", team_name)[0]["id"]
+
+    topic_id = db.execute("SELECT id FROM topics WHERE name = ? AND team_id = ?", topic_name, team_id)
+
+    # Check if the topic exists
+    if topic_id:
+        topic_id = topic_id[0]["id"]
+    else:
+        return jsonify({"success": False,
+                        "error": "Topic does not exist!"})
+
+    # Add the note to the database
+    db.execute("INSERT INTO notes (content, status, topic_id) VALUES (?, ?, ?)", content, status, topic_id)
+
+    flash("Successfully created new note!")
+    return jsonify({"success": True})
 
 
-@app.route("/move_note", methods=["POST"])
+@app.route("/edit_note/<string:team_name>/<string:topic_name>", methods=["POST"])
+@privilege_required("editor", "json")
+def edit_note(team_name, topic_name):
+    """
+    Edit an existing note for a specific topic in a team
+    """
+    
+    data = request.get_json()
+    note_id = data.get("note_id")
+    content = data.get("content")
+
+    # Check if the note exists
+    note_valid = db.execute("SELECT 1 FROM notes WHERE id = ?", note_id)
+    if not note_valid:
+        return jsonify({"success": False,
+                        "error": "Note does not exist!"})
+
+    # If content was blank, delete the note
+    if not content:
+        db.execute("DELETE FROM notes WHERE id = ?", note_id)
+        flash("Successfully deleted note!")
+        return jsonify({"success": True})
+
+    # Check length requirement
+    note_length =  len(content)
+    if note_length > 500:
+        return jsonify({"success": False, 
+                        "error": f"Note content is {note_length} characters, limit is 500!"})
+
+    # If all goes well update the note
+    db.execute("UPDATE notes SET content = ? WHERE id = ?",content, note_id)
+    flash("Successfully edited note!")
+    return jsonify({"success": True})
+
+
+@app.route("/move_note/<string:team_name>/<string:topic_name>", methods=["POST"])
 @privilege_required("member", "json")
-def move_note():
+def move_note(team_name, topic_name):
+    """
+    Change a notes status in a topic
+    """
+    
     data = request.get_json()
     note_id = data["note_id"]
     new_status = data["column_id"]
 
+    # Check if the note exists
+    note_valid = db.execute("SELECT 1 FROM notes WHERE id = ?", note_id)
+    if not note_valid:
+        return jsonify({"success": False,
+                        "error": "Note does not exist!"})
+
+    # Check if the new status is valid
+    if new_status not in ["announcement", "todo", "doing", "done", "delete"]:
+        return jsonify({"success": False, 
+                        "error": "Invalid status!"})
+    
+    # If the new is status is delete, delete the note
     if new_status == "delete":
         db.execute("DELETE FROM notes WHERE id = ?", note_id)
-    else:
-        db.execute("UPDATE notes SET status = ? WHERE id = ?", new_status, note_id)
+        flash("Successfully deleted note!")
+        return jsonify({"success": True})
 
-    return jsonify({"status": True})
+    # Else, update the notes status
+    db.execute("UPDATE notes SET status = ? WHERE id = ?", new_status, note_id)
+    return jsonify({"success": True})
+
 """
 Logic and route block end regarding board viewing and management.
 """

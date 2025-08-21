@@ -1,0 +1,149 @@
+{% extends "layout.html" %}
+
+
+{% block title %}
+
+    Board
+
+{% endblock %}
+
+{% block scripts %}
+
+    <script src="/static/board.js"></script>
+
+{% endblock %}
+
+{% block main %}
+
+    {% set statuses = [
+        {"id": "announcement", "name": "Announcements"},
+        {"id": "todo", "name": "To Do"},
+        {"id": "doing", "name": "Doing"},
+        {"id": "done", "name": "Done"}
+    ] %}
+
+    {% if privilege in ['admin', 'edit'] %}
+        {% set statuses = statuses + [{"id": "delete", "name": "DELETE"}] %}
+    {% endif %}
+
+    <div class="mb-4">
+        <h1 class="text-center">{{ info.topic_name }}</h1>
+        <p class="text-center text-muted">Team: {{ info.team_name }}</p>
+        <a href="/team/{{ info.team_name }}" class="btn btn-secondary">Back To Team</a>
+    </div>
+
+    <input type="hidden" id="team-name" value="{{ info.team_name }}">
+    <input type="hidden" id="topic-name" value="{{ info.topic_name }}">
+    <input type="hidden" id="privilege" value="{{ privilege }}">
+    
+    {% if cards or privilege in ['admin', 'edit'] %}
+        <div class="accordion-row py-3 d-flex flex-column flex-md-row">
+            {% for status in statuses %}
+                {% if status.id == 'delete' %}
+                    <div class="delete-column p-3" data-status="{{ status.id }}">
+                        <div class="alert alert-danger mb-0" role="alert">
+                            <div>DELETE</div>
+                        </div>
+
+                        <div class="delete-content">
+                            <div class="cards-section"></div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="accordion mb-3" data-status="{{ status.id }}">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ status.id }}" aria-expanded="true" aria-controls="collapse-{{ status.id }}">
+                                    {{ status.name }}
+                                </button>
+                            {% if privilege in ['admin', 'edit'] %}
+                                <button class="add-note-button btn btn-sm btn-primary w-100 mb-3"  data-status="{{ status.id }}"  data-bs-toggle="modal"  data-bs-target="#add-note-modal">Add Note</button>
+                            {% endif %}
+                            </h2>
+                            
+                            <div id="collapse-{{ status.id }}" 
+                                 class="accordion-collapse collapse show" 
+                                 data-bs-parent="#accordion-{{ status.id }}">
+                                <div class="accordion-body">
+                                    <div class="cards-section">
+                                        {% for card in cards if card.status == status.id %}
+                                            <div class="card mb-2 draggable-card" draggable="true" data-note-id="{{ card.id }}">
+                                                <div class="card-body p-2">
+                                                    <p class="card-text small mb-0">{{ card.content }}</p>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-center mt-5"><i>Nothing to show here...</i></p>
+    {% endif %}
+
+    <div class="modal-container">
+        <div class="modal fade" id="add-note-modal" tabindex="-1" aria-labelledby="add-note-modal-label" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="add-note-modal-label">Add New Note</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <label for="add-note-content" class="form-label">Note Content</label>
+                        <textarea class="form-control" id="add-note-content" rows="4" placeholder="Enter your note here..." maxlength="500"></textarea>
+                    </div>
+
+                    <div class="modal-footer justify-content-center">
+                        <button type="button" class="btn btn-primary" id="add-note-button" data-bs-dismiss="modal" disabled>Add Note</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="edit-note-modal" tabindex="-1" aria-labelledby="edit-note-modal-label" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="edit-note-modal-label">Edit Note</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <label for="edit-note-content" class="form-label">Note Content</label>
+                        <textarea class="form-control" id="edit-note-content" rows="4" placeholder="Edit your note..." maxlength="500"></textarea>
+                    </div>
+
+                    <div class="modal-footer justify-content-center">
+                        <button type="button" class="btn btn-primary" id="edit-note-button" data-bs-dismiss="modal" disabled>Update Note</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" id="mobile-warning-modal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Warning</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body alert alert-warning">
+                        <p>Note moving on mobile is not supported yet. For note moving, please use a desktop device!</p>
+                    </div>
+
+                    <div class="modal-footer justify-content-center">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

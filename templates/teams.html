@@ -45,11 +45,11 @@
     </div>
 
     <div class="text-center">
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#create-team-modal">
+        <button type="button" class="btn btn-primary mb-1" data-bs-toggle="modal" data-bs-target="#create-team-modal">
             Create A Team!
         </button>
 
-        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#join-team-modal">
+        <button type="button" class="btn btn-info mb-1" data-bs-toggle="modal" data-bs-target="#join-team-modal">
             Join Team By Code Or Name!
         </button>
     </div>
@@ -79,10 +79,10 @@
                         <p class="card-text">Member count: {{ team.member_count }}</p>
                         <p class="card-text">Status: {{ team.access_type.capitalize() }}</p>
                         <p class="card-text">Team Code: {{ team.code }}</p>
-                        <a href="/team/{{ team.name }}" class="btn btn-primary mb-2">View team!</a>
-                        <a href="/edit_team/{{ team.name }}" class="btn btn-success mb-2">Edit Team!</a>
+                        <a href="/team/{{ team.name }}" class="btn btn-primary mb-1">View team!</a>
+                        <a href="/edit_team/{{ team.name }}" class="btn btn-success mb-1">Edit Team!</a>
                         {% if team.privilege == "admin" %}
-                            <a href="/manage_team/{{ team.name }}" class="btn btn-warning mb-2">Manage Team!</a>
+                            <a href="/manage_team/{{ team.name }}" class="btn btn-warning mb-1">Manage Team!</a>
                         {% endif %}
                     </div>
                 </div>
