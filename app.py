@@ -1124,4 +1124,4 @@ Logic and route block end regarding board viewing and management.
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run
